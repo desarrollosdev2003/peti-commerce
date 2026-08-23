@@ -1,0 +1,52 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --bg-light: #fdf8f9;
+  --bg-dark1: #131014;
+  --bg-dark2: #1e1820;
+  --bg-dark3: #2d2430;
+  --color-primary-pink: #f43f5e;
+  --color-primary-green: #10b981;
+}
+
+html {
+  font-size: 17.5px; /* Aumenta la escala global de tipografía en ~1.5px a 2px */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-montserrat);
+  line-height: 1.55;
+}
+
+.font-title {
+  font-family: var(--font-lato);
+  letter-spacing: 0.05em;
+}
+
+.font-body {
+  font-family: var(--font-montserrat);
+}
+
+@theme inline {
+  --color-light: var(--bg-light);
+  --color-dark1: var(--bg-dark1);
+  --color-dark2: var(--bg-dark2);
+  --color-dark3: var(--bg-dark3);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-lato);
+  letter-spacing: 0.05em;
+}
