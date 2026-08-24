@@ -171,10 +171,10 @@ export const AuthModal = () => {
         </div>
 
         {/* ======================================================== */}
-        {/* VIEW 1: CLIENTES / COMPRADORES (Google o Email/Password) */}
+        {/* VIEW 1: CLIENTES / COMPRADORES (Formulario primero, Google después) */}
         {/* ======================================================== */}
         {roleTab === 'customer' ? (
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <div className="text-center space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500">
                 Acceso de Clientes
@@ -185,46 +185,6 @@ export const AuthModal = () => {
               <p className="text-xs text-neutral-500 max-w-xs mx-auto">
                 Accede a tu historial de encargos y chatea en vivo con Peti.
               </p>
-            </div>
-
-            {/* Google OAuth Button */}
-            <div className="pt-1">
-              <button
-                type="button"
-                onClick={handleGoogleClick}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-3 px-4 text-xs font-bold text-neutral-800 dark:text-neutral-200 shadow-2xs transition-all active:scale-98 cursor-pointer disabled:opacity-50"
-              >
-                {/* Google Icon SVG */}
-                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#EA4335"
-                    d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
-                  />
-                  <path
-                    fill="#4285F4"
-                    d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
-                  />
-                </svg>
-                <span>Continuar con Google</span>
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div className="relative flex py-1 items-center">
-              <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800" />
-              <span className="flex-shrink mx-2 text-[10px] uppercase font-bold text-neutral-400">
-                O con Email y Contraseña
-              </span>
-              <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800" />
             </div>
 
             {/* Mode Switcher: Iniciar Sesión vs Crear Cuenta */}
@@ -353,6 +313,46 @@ export const AuthModal = () => {
                 )}
               </button>
             </form>
+
+            {/* Divider */}
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800" />
+              <span className="flex-shrink mx-2 text-[10px] uppercase font-bold text-neutral-400">
+                O continuar con
+              </span>
+              <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800" />
+            </div>
+
+            {/* Google OAuth Button */}
+            <div>
+              <button
+                type="button"
+                onClick={handleGoogleClick}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-3 px-4 text-xs font-bold text-neutral-800 dark:text-neutral-200 shadow-2xs transition-all active:scale-98 cursor-pointer disabled:opacity-50"
+              >
+                {/* Google Icon SVG */}
+                <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#EA4335"
+                    d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
+                  />
+                  <path
+                    fill="#4285F4"
+                    d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
+                  />
+                </svg>
+                <span>Continuar con Google</span>
+              </button>
+            </div>
 
             <div className="pt-1 text-center">
               <p className="text-[10px] text-neutral-400 flex items-center justify-center gap-1">
