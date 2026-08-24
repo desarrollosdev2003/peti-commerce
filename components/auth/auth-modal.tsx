@@ -23,8 +23,8 @@ export const AuthModal = () => {
   // Tab switcher: 'customer' (Google/Discord) vs 'admin' (Email + Password)
   const [tab, setTab] = useState<'customer' | 'admin'>('customer');
 
-  // Admin form state
-  const [adminEmail, setAdminEmail] = useState('peti.artist@gmail.com');
+  // Admin form state (Empty initial state)
+  const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [adminError, setAdminError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -191,7 +191,7 @@ export const AuthModal = () => {
                     required
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
-                    placeholder="peti.artist@gmail.com"
+                    placeholder="tu-correo@gmail.com"
                     className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 py-2.5 pl-9 pr-3.5 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none"
                   />
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
