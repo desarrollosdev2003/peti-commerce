@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { Order } from '@/lib/types';
 import { getSupabaseServerClient } from '@/lib/supabase/server';
-import { convertUsdToArs, USD_TO_ARS_RATE } from '@/lib/utils';
+import { convertUsdToArs } from '@/lib/utils';
+import { getLiveUsdArsRate } from '@/lib/services/dolar-service';
 
 const mpAccessToken = process.env.MP_ACCESS_TOKEN || '';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -20,6 +21,9 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    // Fetch live USD/ARS rate from DolarApi (precio de venta)
+    const { rate: liveRate, casa } = await getLiveUsdArsRate();
 
     const orderCleanNumber = order.orderNumber.replace('#', '');
     const returnUrl = `${appUrl}/track/${orderCleanNumber}`;
@@ -54,10 +58,9 @@ export async function POST(request: Request) {
       });
     }
 
-    // Convert items from USD to ARS for Mercado Pago Argentina
+    // Convert items from USD to ARS for Mercado Pago Argentina using live rate
     const items = order.items.map((item) => {
-      // If item is in USD (typical catalog base price like $95, $275, etc.)
-      const unitPriceArs = convertUsdToArs(Number(item.unitPrice));
+      const unitPriceArs = convertUsdToArs(Number(item.unitPrice), liveRate);
 
       return {
         id: item.commissionId,
@@ -86,7 +89,8 @@ export async function POST(request: Request) {
       notification_url: `${appUrl}/api/payments/mercadopago/webhook`,
       metadata: {
         usd_total: order.total,
-        exchange_rate_used: USD_TO_ARS_RATE,
+        exchange_rate_used: liveRate,
+        exchange_rate_source: `dolarapi.com/${casa}`,
         order_id: order.id,
       },
     };

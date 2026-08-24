@@ -43,8 +43,23 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [customerName, setCustomerName] = useState(user?.name || '');
   const [customerEmail, setCustomerEmail] = useState(user?.email || '');
   const [customerDiscord, setCustomerDiscord] = useState(user?.discord || '');
+  const [liveExchangeRate, setLiveExchangeRate] = useState<number>(USD_TO_ARS_RATE);
+  const [rateCasa, setRateCasa] = useState<string>('Blue');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+
+  // Fetch live exchange rate from DolarApi on mount
+  React.useEffect(() => {
+    fetch('/api/exchange-rate')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.rate && typeof data.rate === 'number') {
+          setLiveExchangeRate(data.rate);
+          if (data.casa) setRateCasa(data.casa.toUpperCase());
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   if (!isOpen) return null;
 
@@ -316,7 +331,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <Lock className="h-4 w-4" />
                     <span>
                       {paymentMethod === 'mercadopago'
-                        ? `Pagar ${formatCurrency(total, 'ARS')} con Mercado Pago`
+                        ? `Pagar ${formatCurrency(total, 'ARS', liveExchangeRate)} con Mercado Pago`
                         : paymentMethod === 'polar'
                         ? `Pagar $${total} USD con Polar.sh (Stripe)`
                         : `Confirmar Pedido de Prueba ($${total} USD)`}
@@ -327,7 +342,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               {paymentMethod === 'mercadopago' && (
                 <p className="text-[10px] text-neutral-400">
-                  Conversión automática: <strong>${total} USD</strong> ≈ <strong className="text-sky-500">{formatCurrency(total, 'ARS')}</strong> (1 USD = ${USD_TO_ARS_RATE.toLocaleString('es-AR')} ARS)
+                  Conversión en vivo (DolarApi • {rateCasa} Venta): <strong>${total} USD</strong> ≈{' '}
+                  <strong className="text-sky-500">{formatCurrency(total, 'ARS', liveExchangeRate)}</strong> (1 USD = ${liveExchangeRate.toLocaleString('es-AR')} ARS)
                 </p>
               )}
             </div>

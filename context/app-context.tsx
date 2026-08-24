@@ -26,6 +26,7 @@ interface AppContextType {
   updateCustomer: (id: string, updates: Partial<CustomerUser>) => void;
   currency: 'USD' | 'ARS';
   setCurrency: (c: 'USD' | 'ARS') => void;
+  exchangeRate: number;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -46,7 +47,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
   const [currency, setCurrency] = useState<'USD' | 'ARS'>('USD');
+  const [exchangeRate, setExchangeRate] = useState<number>(Number(process.env.NEXT_PUBLIC_USD_ARS_RATE) || 1500);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Fetch live exchange rate from DolarApi on mount
+  useEffect(() => {
+    fetch('/api/exchange-rate')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.rate && typeof data.rate === 'number') {
+          setExchangeRate(data.rate);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Clear legacy mock keys and load persisted data
   useEffect(() => {
@@ -473,6 +487,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateCustomer,
         currency,
         setCurrency,
+        exchangeRate,
       }}
     >
       {children}
