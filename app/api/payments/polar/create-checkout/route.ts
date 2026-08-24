@@ -56,10 +56,13 @@ export async function POST(request: Request) {
     const totalCents = Math.round(order.total * 100);
     const itemTitles = order.items.map((i) => i.title).join(', ') || 'Comisión de Arte';
 
-    // 1. Create a product in Polar with the exact order price
+    // 1. Create a product in Polar with the exact order price (Polar name max_length is 64 chars)
+    const rawName = `Pedido ${order.orderNumber} - ${itemTitles}`;
+    const safeProductName = rawName.length > 55 ? `${rawName.substring(0, 52)}...` : rawName;
+
     const productPayload = {
-      name: `Encargo ${order.orderNumber} • ${itemTitles.substring(0, 100)}`,
-      description: `Comisión personalizada por Peti (${order.items[0]?.commissionData?.usageType === 'commercial' ? 'Uso Comercial' : 'Uso Personal'})`,
+      name: safeProductName,
+      description: 'Ilustración digital personalizada por Peti',
       prices: [
         {
           amount_type: 'fixed',
