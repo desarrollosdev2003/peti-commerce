@@ -138,96 +138,112 @@ export const CustomersDirectory = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
-              {filteredCustomers.map((cust) => (
-                <tr
-                  key={cust.id}
-                  className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/50 transition-colors group cursor-pointer"
-                  onClick={() => setSelectedCustomer(cust)}
-                >
-                  {/* Customer Avatar & Name */}
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={cust.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
-                        alt={cust.name}
-                        className="h-9 w-9 rounded-full object-cover border border-rose-200 dark:border-neutral-700 shadow-2xs"
-                      />
-                      <div>
-                        <p className="font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
-                          <span>{cust.name}</span>
-                          {cust.totalOrders > 1 && (
-                            <span className="rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 px-1.5 py-0.2 text-[9px] font-bold">
-                              Frecuente
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-[10px] text-neutral-400">
-                          Registrado: {formatDate(cust.createdAt)}
-                        </p>
-                      </div>
+              {filteredCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-xs text-neutral-400">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-400 mb-2">
+                      <Users className="h-5 w-5" />
                     </div>
-                  </td>
-
-                  {/* Email & Discord */}
-                  <td className="py-3.5 px-4">
-                    <div className="space-y-0.5">
-                      <p className="text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
-                        <Mail className="h-3 w-3 text-neutral-400 shrink-0" />
-                        <span className="truncate max-w-[160px]">{cust.email}</span>
-                      </p>
-                      {cust.discord && (
-                        <p className="text-[10px] text-indigo-500 font-semibold flex items-center gap-1">
-                          <span>Discord: {cust.discord}</span>
-                        </p>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Orders count & Spending */}
-                  <td className="py-3.5 px-4">
-                    <div className="space-y-0.5">
-                      <p className="font-extrabold text-rose-600 dark:text-rose-400">
-                        {formatCurrency(cust.totalSpent, currency)}
-                      </p>
-                      <p className="text-[10px] text-neutral-500">
-                        {cust.totalOrders} {cust.totalOrders === 1 ? 'encargo' : 'encargos'}
-                      </p>
-                    </div>
-                  </td>
-
-                  {/* Status Badge */}
-                  <td className="py-3.5 px-4">
-                    {cust.hasActiveOrder ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Pedido en Curso
-                      </span>
-                    ) : cust.totalOrders > 0 ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">
-                        <CheckCircle2 className="h-3 w-3 text-neutral-400" />
-                        Completado
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-neutral-400">Sin pedidos</span>
-                    )}
-                  </td>
-
-                  {/* Action button */}
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCustomer(cust);
-                      }}
-                      className="inline-flex items-center gap-1 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-rose-500 hover:text-white px-3 py-1.5 text-[11px] font-bold text-neutral-700 dark:text-neutral-300 transition-colors"
-                    >
-                      <span>Ver Ficha</span>
-                      <ChevronRight className="h-3 w-3" />
-                    </button>
+                    <p className="font-semibold text-neutral-700 dark:text-neutral-300">
+                      {searchTerm ? 'No se encontraron clientes con esa búsqueda' : 'Aún no hay clientes registrados'}
+                    </p>
+                    <p className="text-[11px] text-neutral-400 mt-0.5 max-w-sm mx-auto">
+                      Los compradores aparecerán aquí automáticamente en cuanto se registren con Google / Discord o encarguen una comisión.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredCustomers.map((cust) => (
+                  <tr
+                    key={cust.id}
+                    className="hover:bg-neutral-50/80 dark:hover:bg-neutral-800/50 transition-colors group cursor-pointer"
+                    onClick={() => setSelectedCustomer(cust)}
+                  >
+                    {/* Customer Avatar & Name */}
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={cust.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
+                          alt={cust.name}
+                          className="h-9 w-9 rounded-full object-cover border border-rose-200 dark:border-neutral-700 shadow-2xs"
+                        />
+                        <div>
+                          <p className="font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                            <span>{cust.name}</span>
+                            {cust.totalOrders > 1 && (
+                              <span className="rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 px-1.5 py-0.2 text-[9px] font-bold">
+                                Frecuente
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-neutral-400">
+                            Registrado: {formatDate(cust.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Email & Discord */}
+                    <td className="py-3.5 px-4">
+                      <div className="space-y-0.5">
+                        <p className="text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
+                          <Mail className="h-3 w-3 text-neutral-400 shrink-0" />
+                          <span className="truncate max-w-[160px]">{cust.email}</span>
+                        </p>
+                        {cust.discord && (
+                          <p className="text-[10px] text-indigo-500 font-semibold flex items-center gap-1">
+                            <span>Discord: {cust.discord}</span>
+                          </p>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Orders count & Spending */}
+                    <td className="py-3.5 px-4">
+                      <div className="space-y-0.5">
+                        <p className="font-extrabold text-rose-600 dark:text-rose-400">
+                          {formatCurrency(cust.totalSpent, currency)}
+                        </p>
+                        <p className="text-[10px] text-neutral-500">
+                          {cust.totalOrders} {cust.totalOrders === 1 ? 'encargo' : 'encargos'}
+                        </p>
+                      </div>
+                    </td>
+
+                    {/* Status Badge */}
+                    <td className="py-3.5 px-4">
+                      {cust.hasActiveOrder ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Pedido en Curso
+                        </span>
+                      ) : cust.totalOrders > 0 ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">
+                          <CheckCircle2 className="h-3 w-3 text-neutral-400" />
+                          Completado
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-neutral-400">Sin pedidos</span>
+                      )}
+                    </td>
+
+                    {/* Action button */}
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCustomer(cust);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-rose-500 hover:text-white px-3 py-1.5 text-[11px] font-bold text-neutral-700 dark:text-neutral-300 transition-colors"
+                      >
+                        <span>Ver Ficha</span>
+                        <ChevronRight className="h-3 w-3" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

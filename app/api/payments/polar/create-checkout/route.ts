@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Order } from '@/lib/types';
+import { getSupabaseServerClient } from '@/lib/supabase/server';
 
 const polarAccessToken = process.env.POLAR_ACCESS_TOKEN || '';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -21,6 +22,36 @@ export async function POST(request: Request) {
 
     const orderCleanNumber = order.orderNumber.replace('#', '');
     const successUrl = `${appUrl}/track/${orderCleanNumber}`;
+
+    // Store pending order in Supabase database
+    const supabase = getSupabaseServerClient();
+    if (supabase) {
+      await supabase.from('orders').upsert({
+        id: order.id,
+        order_number: order.orderNumber,
+        customer_id: order.customerId,
+        customer_name: order.customerName,
+        customer_email: order.customerEmail,
+        total: order.total,
+        payment_method: 'polar',
+        status: 'pending',
+        notes: order.notes,
+        items: order.items,
+        created_at: order.createdAt,
+        estimated_delivery: order.estimatedDelivery,
+      });
+
+      // Insert welcome message in order chat
+      await supabase.from('order_messages').insert({
+        id: `msg-${Date.now()}-welcome`,
+        order_id: order.id,
+        sender: 'artist',
+        sender_name: 'Peti',
+        text: `¡Hola ${order.customerName}! Gracias por tu encargo (${order.orderNumber}). Ya he recibido tu briefing y referencias. Te compartiré por aquí los primeros bocetos para validar la pose y detalles. ✨`,
+        type: 'system',
+        created_at: new Date().toISOString(),
+      });
+    }
 
     const checkoutPayload = {
       amount: Math.round(order.total * 100), // Polar expects integer in cents (e.g. $95.00 -> 9500)

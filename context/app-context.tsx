@@ -30,10 +30,15 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY_COMMISSIONS = 'peti_commissions_v4';
-const STORAGE_KEY_ORDERS = 'peti_orders_v4';
-const STORAGE_KEY_ARTIST = 'peti_artist_v4';
-const STORAGE_KEY_CUSTOMERS = 'peti_customers_v4';
+// Fresh Production Storage Keys
+const STORAGE_KEY_COMMISSIONS = 'peti_commissions_prod_v1';
+const STORAGE_KEY_ORDERS = 'peti_orders_prod_v1';
+const STORAGE_KEY_ARTIST = 'peti_artist_prod_v1';
+const STORAGE_KEY_CUSTOMERS = 'peti_customers_prod_v1';
+
+// Legacy mock IDs filter list
+const DUMMY_CUSTOMER_IDS = ['usr-alex', 'usr-valeria', 'usr-marcus', 'usr-sofia'];
+const DUMMY_ORDER_IDS = ['ord-101', 'ord-102', 'ord-103', 'ord-104', '#PETI-8901', '#PETI-8902', '#PETI-8903', '#PETI-8904'];
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [artist, setArtist] = useState<ArtistProfile>(INITIAL_ARTIST);
@@ -43,9 +48,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currency, setCurrency] = useState<'USD' | 'ARS'>('USD');
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load persisted data
+  // Clear legacy mock keys and load persisted data
   useEffect(() => {
     try {
+      // Purge legacy mock storage
+      localStorage.removeItem('peti_customers_v1');
+      localStorage.removeItem('peti_customers_v4');
+      localStorage.removeItem('peti_orders_v3');
+      localStorage.removeItem('peti_orders_v4');
+
       const storedArtist = localStorage.getItem(STORAGE_KEY_ARTIST);
       if (storedArtist) setArtist(JSON.parse(storedArtist));
 
@@ -53,10 +64,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (storedCommissions) setCommissions(JSON.parse(storedCommissions));
 
       const storedOrders = localStorage.getItem(STORAGE_KEY_ORDERS);
-      if (storedOrders) setOrders(JSON.parse(storedOrders));
+      if (storedOrders) {
+        const parsed: Order[] = JSON.parse(storedOrders);
+        setOrders(parsed.filter((o) => !DUMMY_ORDER_IDS.includes(o.id) && !DUMMY_ORDER_IDS.includes(o.orderNumber)));
+      }
 
       const storedCustomers = localStorage.getItem(STORAGE_KEY_CUSTOMERS);
-      if (storedCustomers) setCustomers(JSON.parse(storedCustomers));
+      if (storedCustomers) {
+        const parsed: CustomerUser[] = JSON.parse(storedCustomers);
+        setCustomers(parsed.filter((c) => !DUMMY_CUSTOMER_IDS.includes(c.id)));
+      }
     } catch (e) {
       console.error('Error loading data from localStorage', e);
     } finally {
@@ -64,7 +81,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Fetch real production orders from Supabase on mount
+  // Fetch real production orders and customers from Supabase on mount
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
@@ -75,34 +92,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (!error && data && data.length > 0) {
-          const mappedOrders: Order[] = data.map((d: any) => ({
-            id: d.id,
-            orderNumber: d.order_number,
-            customerId: d.customer_id,
-            customerName: d.customer_name,
-            customerEmail: d.customer_email,
-            total: Number(d.total),
-            paymentMethod: d.payment_method,
-            status: d.status,
-            createdAt: d.created_at,
-            estimatedDelivery: d.estimated_delivery,
-            notes: d.notes,
-            items: d.items || [],
-            deliveredFiles: d.delivered_files || [],
-            messages: (d.order_messages || []).map((m: any) => ({
-              id: m.id,
-              orderId: m.order_id,
-              sender: m.sender,
-              senderName: m.sender_name,
-              text: m.text,
-              attachmentUrl: m.attachment_url,
-              attachmentName: m.attachment_name,
-              type: m.type,
-              createdAt: m.created_at,
-              isRead: true,
-            })),
-          }));
+          const mappedOrders: Order[] = data
+            .filter((d: any) => !DUMMY_ORDER_IDS.includes(d.id) && !DUMMY_ORDER_IDS.includes(d.order_number))
+            .map((d: any) => ({
+              id: d.id,
+              orderNumber: d.order_number,
+              customerId: d.customer_id,
+              customerName: d.customer_name,
+              customerEmail: d.customer_email,
+              total: Number(d.total),
+              paymentMethod: d.payment_method,
+              status: d.status,
+              createdAt: d.created_at,
+              estimatedDelivery: d.estimated_delivery,
+              notes: d.notes,
+              items: d.items || [],
+              deliveredFiles: d.delivered_files || [],
+              messages: (d.order_messages || []).map((m: any) => ({
+                id: m.id,
+                orderId: m.order_id,
+                sender: m.sender,
+                senderName: m.sender_name,
+                text: m.text,
+                attachmentUrl: m.attachment_url,
+                attachmentName: m.attachment_name,
+                type: m.type,
+                createdAt: m.created_at,
+                isRead: true,
+              })),
+            }));
+
           setOrders(mappedOrders);
+
+          // Populate customers directory from real Supabase orders
+          const realCustomersMap = new Map<string, CustomerUser>();
+          mappedOrders.forEach((ord) => {
+            const email = ord.customerEmail.toLowerCase().trim();
+            if (!realCustomersMap.has(email)) {
+              realCustomersMap.set(email, {
+                id: ord.customerId || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                name: ord.customerName,
+                email: ord.customerEmail,
+                discord: ord.notes?.includes('Discord:') ? ord.notes.replace('Discord:', '').trim() : undefined,
+                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+                role: 'customer',
+                createdAt: ord.createdAt,
+              });
+            }
+          });
+
+          setCustomers((prev) => {
+            const combined = [...prev.filter((c) => !DUMMY_CUSTOMER_IDS.includes(c.id))];
+            realCustomersMap.forEach((newCust) => {
+              if (!combined.some((c) => c.email.toLowerCase() === newCust.email.toLowerCase())) {
+                combined.push(newCust);
+              }
+            });
+            return combined;
+          });
         }
       });
   }, []);
@@ -112,14 +159,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY_ORDERS && e.newValue) {
         try {
-          setOrders(JSON.parse(e.newValue));
+          const parsed: Order[] = JSON.parse(e.newValue);
+          setOrders(parsed.filter((o) => !DUMMY_ORDER_IDS.includes(o.id) && !DUMMY_ORDER_IDS.includes(o.orderNumber)));
         } catch (err) {
           console.error(err);
         }
       }
       if (e.key === STORAGE_KEY_CUSTOMERS && e.newValue) {
         try {
-          setCustomers(JSON.parse(e.newValue));
+          const parsed: CustomerUser[] = JSON.parse(e.newValue);
+          setCustomers(parsed.filter((c) => !DUMMY_CUSTOMER_IDS.includes(c.id)));
         } catch (err) {
           console.error(err);
         }
