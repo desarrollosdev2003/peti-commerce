@@ -38,6 +38,17 @@ export default function CustomerAccountPage() {
   const [isUploading, setIsUploading] = useState(false);
   const chatFileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = React.useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight + 1000,
+        behavior,
+      });
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+  }, []);
 
   // Profile form state
   const [nameInput, setNameInput] = useState('');
@@ -68,10 +79,14 @@ export default function CustomerAccountPage() {
     }
   }, [userOrders, selectedChatOrderId]);
 
-  // Scroll to bottom on messages update
+  // Scroll to bottom on messages update or tab switch
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [orders, selectedChatOrderId]);
+    if (activeTab === 'inbox') {
+      scrollToBottom('smooth');
+      const timer = setTimeout(() => scrollToBottom('smooth'), 80);
+      return () => clearTimeout(timer);
+    }
+  }, [orders, selectedChatOrderId, activeTab, scrollToBottom]);
 
   if (!user) {
     return (
@@ -437,7 +452,7 @@ export default function CustomerAccountPage() {
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-neutral-50/30 dark:bg-neutral-950/20">
+              <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-neutral-50/30 dark:bg-neutral-950/20">
                 {selectedOrder.messages && selectedOrder.messages.length > 0 ? (
                   selectedOrder.messages.map((msg) => {
                     const isMe = msg.sender === 'customer';
@@ -462,6 +477,7 @@ export default function CustomerAccountPage() {
                             <img
                               src={msg.attachmentUrl}
                               alt="adjunto"
+                              onLoad={() => scrollToBottom('smooth')}
                               className="max-h-48 rounded-xl object-cover border border-black/10"
                             />
                           )}

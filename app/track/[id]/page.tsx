@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '@/context/app-context';
@@ -76,6 +76,17 @@ export default function OrderTrackingPage() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight + 1000,
+        behavior,
+      });
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+  }, []);
 
   // Sync order state whenever AppContext orders change
   useEffect(() => {
@@ -94,10 +105,12 @@ export default function OrderTrackingPage() {
     }
   }, [rawId, orders, getOrder]);
 
-  // Scroll to bottom on new message
+  // Scroll to bottom on new message or order update
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [order?.messages]);
+    scrollToBottom('smooth');
+    const timer = setTimeout(() => scrollToBottom('smooth'), 80);
+    return () => clearTimeout(timer);
+  }, [order?.messages, scrollToBottom]);
 
   // Realtime Supabase Channel Subscription (orders status & chat messages)
   useEffect(() => {
@@ -514,7 +527,7 @@ export default function OrderTrackingPage() {
           </div>
 
           {/* Messages Scroll Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-neutral-50/50 dark:bg-neutral-950/40">
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-neutral-50/50 dark:bg-neutral-950/40">
             {order.messages && order.messages.length > 0 ? (
               order.messages.map((msg) => {
                 const isMsgFromArtist = msg.sender === 'artist';
@@ -590,6 +603,7 @@ export default function OrderTrackingPage() {
                             <img
                               src={msg.attachmentUrl}
                               alt="boceto adjunto"
+                              onLoad={() => scrollToBottom('smooth')}
                               className="max-h-60 w-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[11px] font-bold transition-opacity">

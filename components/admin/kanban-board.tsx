@@ -324,6 +324,26 @@ export const KanbanBoard = () => {
   const [adminChatText, setAdminChatText] = useState('');
   const [isUploadingSketch, setIsUploadingSketch] = useState(false);
   const adminFileInputRef = useRef<HTMLInputElement>(null);
+  const adminChatContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = React.useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (adminChatContainerRef.current) {
+      adminChatContainerRef.current.scrollTo({
+        top: adminChatContainerRef.current.scrollHeight + 1000,
+        behavior,
+      });
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+  }, []);
+
+  React.useEffect(() => {
+    if (modalTab === 'chat' && selectedOrder) {
+      scrollToBottom('smooth');
+      const timer = setTimeout(() => scrollToBottom('smooth'), 80);
+      return () => clearTimeout(timer);
+    }
+  }, [modalTab, selectedOrder?.messages, scrollToBottom, selectedOrder]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -682,7 +702,7 @@ export const KanbanBoard = () => {
             ) : (
               /* Tab 2: Live Chat with Customer */
               <div className="space-y-3">
-                <div className="h-72 overflow-y-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 p-4 space-y-4">
+                <div ref={adminChatContainerRef} className="h-72 overflow-y-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 p-4 space-y-4">
                   {selectedOrder.messages && selectedOrder.messages.length > 0 ? (
                     selectedOrder.messages.map((msg) => {
                       const isArtist = msg.sender === 'artist';
@@ -749,6 +769,7 @@ export const KanbanBoard = () => {
                                 <img
                                   src={msg.attachmentUrl}
                                   alt="adjunto"
+                                  onLoad={() => scrollToBottom('smooth')}
                                   className="max-h-48 w-full rounded-xl object-cover border border-white/20 mt-1.5"
                                 />
                               )}
@@ -767,6 +788,7 @@ export const KanbanBoard = () => {
                       No hay mensajes previos con este cliente.
                     </div>
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Admin Chat Input */}
