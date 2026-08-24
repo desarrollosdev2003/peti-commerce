@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS public.commission_options (
 CREATE TABLE IF NOT EXISTS public.orders (
     id TEXT PRIMARY KEY,
     order_number TEXT NOT NULL UNIQUE,
+    customer_id TEXT,
     customer_name TEXT NOT NULL,
     customer_email TEXT NOT NULL,
     notes TEXT,
@@ -75,7 +76,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
     sample_image TEXT,
     usage_type TEXT NOT NULL DEFAULT 'personal',
     brief TEXT NOT NULL,
-    references TEXT,
+    "references" TEXT,
     selected_options JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -97,9 +98,22 @@ CREATE TABLE IF NOT EXISTS public.order_messages (
 -- ==========================================
 -- ACTIVAR PUBLICACIÓN REALTIME (WEBSOCKETS)
 -- ==========================================
--- Permite que los mensajes aparezcan instantáneamente en pantalla sin recargar
-ALTER PUBLICATION supabase_realtime ADD TABLE public.order_messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'order_messages'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.order_messages;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'orders'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+    END IF;
+END $$;
 
 -- ==========================================
 -- POLÍTICAS DE ACCESO PÚBLICO (RLS)
@@ -111,11 +125,20 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_messages ENABLE ROW LEVEL SECURITY;
 
--- Permitir lectura y escritura con API anon / service_role
+DROP POLICY IF EXISTS "Permitir lectura publica de artistas" ON public.artists;
 CREATE POLICY "Permitir lectura publica de artistas" ON public.artists FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir lectura publica de comisiones" ON public.commissions;
 CREATE POLICY "Permitir lectura publica de comisiones" ON public.commissions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir lectura publica de opciones" ON public.commission_options;
 CREATE POLICY "Permitir lectura publica de opciones" ON public.commission_options FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Permitir acceso a pedidos" ON public.orders;
 CREATE POLICY "Permitir acceso a pedidos" ON public.orders FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Permitir acceso a items de pedido" ON public.order_items;
 CREATE POLICY "Permitir acceso a items de pedido" ON public.order_items FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Permitir lectura y envio de mensajes de chat" ON public.order_messages;
 CREATE POLICY "Permitir lectura y envio de mensajes de chat" ON public.order_messages FOR ALL USING (true);

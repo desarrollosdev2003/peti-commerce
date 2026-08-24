@@ -19,18 +19,19 @@ export async function POST(request: Request) {
     // If Polar API Key is provided, call Polar.sh Custom Checkout API
     if (polarAccessToken && !polarAccessToken.includes('tu-access-token')) {
       const checkoutPayload = {
-        amount: Math.round(order.total * 100), // Polar uses cents
+        amount: Math.round(order.total * 100), // Polar expects integer in cents (e.g. $95.00 -> 9500)
         currency: 'usd',
         customer_email: order.customerEmail,
         customer_name: order.customerName,
-        success_url: successUrl,
+        success_url: `${successUrl}?checkout_id={CHECKOUT_ID}`,
         metadata: {
           order_id: order.id,
           order_number: order.orderNumber,
         },
       };
 
-      const polarRes = await fetch('https://api.polar.sh/v1/checkouts/custom/', {
+      // Try custom ad-hoc checkout endpoint first
+      let polarRes = await fetch('https://api.polar.sh/v1/checkouts/custom/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -39,20 +40,32 @@ export async function POST(request: Request) {
         body: JSON.stringify(checkoutPayload),
       });
 
+      // If custom endpoint is redirected or requires standard checkouts endpoint
+      if (!polarRes.ok && polarRes.status === 404) {
+        polarRes = await fetch('https://api.polar.sh/v1/checkouts/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${polarAccessToken}`,
+          },
+          body: JSON.stringify(checkoutPayload),
+        });
+      }
+
       if (!polarRes.ok) {
-        const errData = await polarRes.json();
+        const errData = await polarRes.json().catch(() => ({}));
         console.error('Polar API Error:', errData);
-        throw new Error('Error creando checkout en Polar');
+        throw new Error('Error creando sesión de checkout en Polar');
       }
 
       const data = await polarRes.json();
       return NextResponse.json({
         success: true,
-        redirectUrl: data.url,
+        redirectUrl: data.url || data.checkout_url,
       });
     }
 
-    // Fallback: Simulation mode
+    // Fallback: Simulation mode for local testing
     return NextResponse.json({
       success: true,
       mocked: true,
