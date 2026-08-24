@@ -18,9 +18,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY_USER = 'peti_auth_session_v4';
+const STORAGE_KEY_USER = 'peti_auth_session_v5';
 
-// Authorized admin emails
+// Authorized admin emails list
 const getAuthorizedAdminEmails = (): string[] => {
   const envEmails = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'francoberlochi@gmail.com,peti.artist@gmail.com';
   return envEmails.toLowerCase().split(',').map((e) => e.trim());
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user, isLoaded]);
 
-  // Check Supabase Auth session if configured
+  // Sync with Supabase Auth Session
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
@@ -65,7 +65,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getUser().then(({ data: { user: supaUser } }) => {
       if (supaUser) {
         const userEmail = (supaUser.email || '').toLowerCase().trim();
-        const isUserAdmin = supaUser.user_metadata?.role === 'admin';
+        const authorized = getAuthorizedAdminEmails();
+        const isUserAdmin = supaUser.user_metadata?.role === 'admin' || authorized.includes(userEmail);
         
         const mappedUser: CustomerUser = {
           id: supaUser.id,
@@ -83,7 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         const supaUser = session.user;
         const userEmail = (supaUser.email || '').toLowerCase().trim();
-        const isUserAdmin = supaUser.user_metadata?.role === 'admin';
+        const authorized = getAuthorizedAdminEmails();
+        const isUserAdmin = supaUser.user_metadata?.role === 'admin' || authorized.includes(userEmail);
         
         setUser({
           id: supaUser.id,
@@ -148,25 +150,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return customerUser;
   };
 
-  // Dedicated Admin Login with Email & Password
+  // Real Supabase Auth Email & Password Login for Admin
   const loginAdminWithPassword = async (
     email: string,
     pass: string
   ): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const authorizedEmails = getAuthorizedAdminEmails();
-    const expectedPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'peti2026';
-
     const isAuthorizedEmail = authorizedEmails.includes(cleanEmail) || cleanEmail.includes('peti.artist') || cleanEmail.includes('francoberlochi');
 
     if (!isAuthorizedEmail) {
       return {
         success: false,
-        error: 'El correo electrónico no está autorizado como administrador de la tienda.',
+        error: 'El correo no figura en la lista de administradores autorizados.',
       };
     }
 
-    // Check with Supabase Auth if available
     const supabase = getSupabaseBrowserClient();
     if (supabase) {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -174,12 +173,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password: pass,
       });
 
-      if (!error && data.user) {
+      if (error) {
+        console.error('Supabase Auth Error:', error.message);
+        return {
+          success: false,
+          error: error.message === 'Invalid login credentials'
+            ? 'Contraseña incorrecta o usuario no registrado en Supabase Auth.'
+            : error.message,
+        };
+      }
+
+      if (data.user) {
         const adminUser: CustomerUser = {
           id: data.user.id,
           email: cleanEmail,
-          name: 'Peti',
+          name: data.user.user_metadata?.full_name || 'Peti',
           avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+          discord: '@peti_art',
           role: 'admin',
           createdAt: data.user.created_at,
         };
@@ -188,8 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Password verification check
-    if (pass === expectedPassword || pass === 'peti2026') {
+    // Fallback if Supabase is offline in local dev mode
+    const fallbackPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'peti2026';
+    if (pass === fallbackPassword) {
       const adminUser: CustomerUser = {
         id: `admin-${Date.now()}`,
         email: cleanEmail,
