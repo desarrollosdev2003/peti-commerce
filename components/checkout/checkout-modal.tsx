@@ -95,15 +95,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       estimatedDelivery: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     };
 
-    // Test Sandbox Mode (Immediate order creation for E2E testing)
-    if (paymentMethod === 'test') {
+    // Inmediatamente registra el pedido en Supabase y abre la Sala de Seguimiento con Chat en Vivo
+    if (paymentMethod === 'mercadopago' || paymentMethod === 'test') {
       try {
-        // Send order to create-preference API or directly to Supabase
+        // Enviar orden a la base de datos de Supabase y generar canal de chat
         await fetch('/api/payments/mercadopago/create-preference', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ order: pendingOrder }),
-        }).catch(() => {});
+        }).catch((e) => console.error('Supabase sync error:', e));
 
         addOrder(pendingOrder);
         clearCart();
@@ -112,16 +112,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         router.push(`/track/${orderNumber.replace('#', '')}`);
         return;
       } catch (err: any) {
-        console.error(err);
+        console.error('Error procesando pedido:', err);
+        setError('Error al crear la orden. Por favor intenta de nuevo.');
+        setIsProcessing(false);
+        return;
       }
     }
 
     try {
-      // Call payment gateway creation
-      const endpoint =
-        paymentMethod === 'mercadopago'
-          ? '/api/payments/mercadopago/create-preference'
-          : '/api/payments/polar/create-checkout';
+      // Call payment gateway creation (Polar.sh)
+      const endpoint = '/api/payments/polar/create-checkout';
 
       const res = await fetch(endpoint, {
         method: 'POST',
