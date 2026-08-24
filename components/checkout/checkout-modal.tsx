@@ -126,8 +126,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         throw new Error(errorMsg);
       }
 
-      // Clear local cart and redirect immediately to real gateway
-      clearCart();
+      // Redirect directly to payment gateway (keep cart intact in case user clicks back)
       window.location.href = data.redirectUrl;
     } catch (err: any) {
       console.error('Error procesando pago:', err);

@@ -8,6 +8,7 @@ import { Order, OrderMessage, OrderStatus } from '@/lib/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { uploadImageFile } from '@/lib/services/upload-service';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { useCart } from '@/context/cart-context';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -41,7 +42,15 @@ export default function OrderTrackingPage() {
   const rawId = (params?.id as string) || '';
   
   const { orders, getOrder, addOrderMessage, updateOrderStatus, artist, currency } = useApp();
+  const { clearCart } = useCart();
   const [order, setOrder] = useState<Order | null>(null);
+
+  // Clear cart when confirmed order tracking room is loaded
+  useEffect(() => {
+    if (rawId) {
+      clearCart();
+    }
+  }, [rawId]);
   const [inputText, setInputText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImagePreview, setSelectedImagePreview] = useState<string | null>(null);
