@@ -2,9 +2,12 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/context/language-context';
 import { ArrowLeft, ShieldCheck, FileText, Sparkles, Scale, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function TermsPage() {
+  const { t, language } = useLanguage();
+
   return (
     <div className="min-h-screen py-10 px-4 sm:px-6 max-w-4xl mx-auto space-y-8">
       {/* Return button */}
@@ -13,7 +16,7 @@ export default function TermsPage() {
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-rose-500 transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        <span>Volver a la Tienda</span>
+        <span>{language === 'en' ? 'Back to Store' : 'Volver a la Tienda'}</span>
       </Link>
 
       {/* Header */}
@@ -24,10 +27,12 @@ export default function TermsPage() {
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wider text-neutral-900 dark:text-white">
-              Términos del Servicio & Condiciones
+              {t('terms_title')}
             </h1>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Última actualización: Agosto 2026 • Políticas claras para el cliente y el artista
+              {language === 'en'
+                ? 'Last updated: August 2026 • Transparent policies for clients & artist'
+                : 'Última actualización: Agosto 2026 • Políticas claras para el cliente y el artista'}
             </p>
           </div>
         </div>
@@ -39,16 +44,27 @@ export default function TermsPage() {
         <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 space-y-3">
           <h2 className="text-lg font-bold tracking-wider text-neutral-900 dark:text-white flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-rose-500" />
-            1. Proceso de Trabajo y Fases
+            {t('terms_sec1_title')}
           </h2>
           <p>
-            Al solicitar una comisión a través de la plataforma, el proceso sigue las siguientes etapas en nuestro Mini Trello:
+            {t('terms_sec1_desc')}
           </p>
           <ul className="list-disc pl-5 space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
-            <li><strong>Cola / Pendiente:</strong> Se valida el briefing, las referencias visuales y el pago.</li>
-            <li><strong>Boceto preliminar (Sketch):</strong> Se envía el primer borrador para validar la pose, composición y anatomía.</li>
-            <li><strong>Lineart & Color base:</strong> Se avanza en los trazos definitivos y la paleta de colores.</li>
-            <li><strong>Renderizado final & Entrega:</strong> Se aplican luces, sombras y efectos, entregando archivos PNG en alta resolución (300 DPI) y PSD si fue contratado.</li>
+            {language === 'en' ? (
+              <>
+                <li><strong>Queued / Pending:</strong> Briefing, references, and payment are validated.</li>
+                <li><strong>Preliminary sketch:</strong> First draft is sent to validate pose, composition, and anatomy.</li>
+                <li><strong>Lineart & Flat colors:</strong> Refined lines and base color scheme are developed.</li>
+                <li><strong>Final Render & Delivery:</strong> Lighting, shading, and effects applied. High-res files delivered (PNG 300 DPI and PSD if selected).</li>
+              </>
+            ) : (
+              <>
+                <li><strong>Cola / Pendiente:</strong> Se valida el briefing, las referencias visuales y el pago.</li>
+                <li><strong>Boceto preliminar (Sketch):</strong> Se envía el primer borrador para validar la pose, composición y anatomía.</li>
+                <li><strong>Lineart & Color base:</strong> Se avanza en los trazos definitivos y la paleta de colores.</li>
+                <li><strong>Renderizado final & Entrega:</strong> Se aplican luces, sombras y efectos, entregando archivos PNG en alta resolución (300 DPI) y PSD si fue contratado.</li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -56,12 +72,22 @@ export default function TermsPage() {
         <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 space-y-3">
           <h2 className="text-lg font-bold tracking-wider text-neutral-900 dark:text-white flex items-center gap-2">
             <RefreshCw className="h-5 w-5 text-purple-500" />
-            2. Revisiones y Modificaciones
+            {t('terms_sec2_title')}
           </h2>
           <ul className="list-disc pl-5 space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
-            <li>Cada encargo incluye <strong>2 rondas de revisiones gratuitas</strong> durante la fase de boceto.</li>
-            <li>Se incluye <strong>1 revisión de ajuste de color</strong> una vez finalizado el coloreado.</li>
-            <li>Cambios estructurales mayores solicitados después de haber aprobado el boceto tendrán un recargo proporcional al tiempo extra requerido.</li>
+            {language === 'en' ? (
+              <>
+                <li>Each commission includes <strong>2 free revision rounds</strong> during the sketch phase.</li>
+                <li>Includes <strong>1 color adjustment revision</strong> once flat coloring is completed.</li>
+                <li>Major structural changes requested after sketch approval may incur an extra fee proportional to required time.</li>
+              </>
+            ) : (
+              <>
+                <li>Cada encargo incluye <strong>2 rondas de revisiones gratuitas</strong> durante la fase de boceto.</li>
+                <li>Se incluye <strong>1 revisión de ajuste de color</strong> una vez finalizado el coloreado.</li>
+                <li>Cambios estructurales mayores solicitados después de haber aprobado el boceto tendrán un recargo proporcional al tiempo extra requerido.</li>
+              </>
+            )}
           </ul>
         </div>
 
@@ -69,20 +95,24 @@ export default function TermsPage() {
         <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 space-y-3">
           <h2 className="text-lg font-bold tracking-wider text-neutral-900 dark:text-white flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-emerald-500" />
-            3. Derechos de Autor y Licencia Comercial
+            {t('terms_sec3_title')}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 text-xs">
             <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-950 p-4 border border-neutral-200 dark:border-neutral-800">
-              <h3 className="font-bold tracking-wider text-neutral-900 dark:text-white text-sm mb-1">Uso Personal</h3>
+              <h3 className="font-bold tracking-wider text-neutral-900 dark:text-white text-sm mb-1">{language === 'en' ? 'Personal Use' : 'Uso Personal'}</h3>
               <p className="text-neutral-500">
-                Puedes usar el arte como avatar, fondo de pantalla, imprimirlo para uso propio o publicarlo en tus redes sociales acreditando al artista (@peti_art). No está permitida la reventa ni monetización.
+                {language === 'en'
+                  ? 'You can use the artwork as avatar, wallpaper, print for personal use, or post on social media crediting the artist (@peti_art). Reselling or monetization is not permitted.'
+                  : 'Puedes usar el arte como avatar, fondo de pantalla, imprimirlo para uso propio o publicarlo en tus redes sociales acreditando al artista (@peti_art). No está permitida la reventa ni monetización.'}
               </p>
             </div>
 
             <div className="rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/10 p-4 border border-emerald-500/20">
-              <h3 className="font-bold tracking-wider text-emerald-700 dark:text-emerald-300 text-sm mb-1">Uso Comercial</h3>
+              <h3 className="font-bold tracking-wider text-emerald-700 dark:text-emerald-300 text-sm mb-1">{language === 'en' ? 'Commercial Use' : 'Uso Comercial'}</h3>
               <p className="text-neutral-600 dark:text-neutral-300">
-                Permite el uso de la ilustración para streaming (Twitch/YouTube), portadas de álbumes, merchandising físico o digital, publicidad y branding sin regalías adicionales.
+                {language === 'en'
+                  ? 'Allows using the illustration for streaming (Twitch/YouTube), album covers, physical or digital merch, advertising, and branding with no extra royalties.'
+                  : 'Permite el uso de la ilustración para streaming (Twitch/YouTube), portadas de álbumes, merchandising físico o digital, publicidad y branding sin regalías adicionales.'}
               </p>
             </div>
           </div>
@@ -92,13 +122,24 @@ export default function TermsPage() {
         <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 space-y-3">
           <h2 className="text-lg font-bold tracking-wider text-neutral-900 dark:text-white flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-amber-500" />
-            4. Pagos, Pasarelas y Política de Reembolsos
+            {t('terms_sec4_title')}
           </h2>
           <ul className="list-disc pl-5 space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
-            <li>Los pagos se procesan de manera segura mediante <strong>Mercado Pago</strong> (Argentina / Latam) y <strong>Polar.sh</strong> (Internacional).</li>
-            <li><strong>Reembolso del 100%:</strong> Si el artista no puede iniciar el trabajo o si el cliente cancela antes del envío del primer boceto.</li>
-            <li><strong>Reembolso del 50%:</strong> Si se cancela durante la fase de boceto inicial.</li>
-            <li><strong>No reembolsable:</strong> Una vez aprobado el boceto y comenzado el lineart/color definitivo.</li>
+            {language === 'en' ? (
+              <>
+                <li>Payments are processed securely via <strong>Mercado Pago</strong> (Argentina / Latam) and <strong>Polar.sh</strong> (International).</li>
+                <li><strong>100% Refund:</strong> If the artist cannot initiate the work or if the client cancels prior to the first sketch.</li>
+                <li><strong>50% Refund:</strong> If cancelled during the preliminary sketch stage.</li>
+                <li><strong>Non-refundable:</strong> Once the sketch is approved and final lineart/coloring has begun.</li>
+              </>
+            ) : (
+              <>
+                <li>Los pagos se procesan de manera segura mediante <strong>Mercado Pago</strong> (Argentina / Latam) y <strong>Polar.sh</strong> (Internacional).</li>
+                <li><strong>Reembolso del 100%:</strong> Si el artista no puede iniciar el trabajo o si el cliente cancela antes del envío del primer boceto.</li>
+                <li><strong>Reembolso del 50%:</strong> Si se cancela durante la fase de boceto inicial.</li>
+                <li><strong>No reembolsable:</strong> Una vez aprobado el boceto y comenzado el lineart/color definitivo.</li>
+              </>
+            )}
           </ul>
         </div>
       </div>

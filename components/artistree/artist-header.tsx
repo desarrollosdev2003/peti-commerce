@@ -3,11 +3,18 @@
 import React from 'react';
 import { Star, ShieldCheck, CheckCircle2, Globe } from 'lucide-react';
 import { useApp } from '@/context/app-context';
+import { useLanguage } from '@/context/language-context';
 
 export const ArtistHeader = () => {
   const { artist, commissions } = useApp();
+  const { t, language } = useLanguage();
 
   const totalSlots = commissions.reduce((sum, c) => (c.active ? sum + c.slotsAvailable : sum), 0);
+
+  const displayBio =
+    language === 'en'
+      ? 'Digital Artist & Character Designer. Commissions Open for Anime, Furry, Chibi, VTuber Assets & Emotes. Fast turnaround with direct chat!'
+      : artist.bio;
 
   return (
     <div className="relative mx-auto w-full max-w-4xl pt-10 sm:pt-12 pb-4 sm:pb-6 px-3 sm:px-4">
@@ -42,7 +49,7 @@ export const ArtistHeader = () => {
 
         {/* Bio */}
         <p className="mx-auto mt-3 sm:mt-4 max-w-2xl text-xs sm:text-sm leading-relaxed text-neutral-600 dark:text-neutral-300 font-medium">
-          {artist.bio}
+          {displayBio}
         </p>
 
         {/* Trust Badges & Metrics */}
@@ -50,17 +57,17 @@ export const ArtistHeader = () => {
           <div className="flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.8 text-amber-700 dark:text-amber-400 border border-amber-500/20">
             <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-amber-500 text-amber-500" />
             <span className="font-bold">{artist.rating}</span>
-            <span className="text-[10px] opacity-80">({artist.reviewsCount} reviews)</span>
+            <span className="text-[10px] opacity-80">({t('artist_reviews', { count: artist.reviewsCount })})</span>
           </div>
 
           <div className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.8 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span>{totalSlots} slots disponibles</span>
+            <span>{t('artist_open_slots', { count: totalSlots })}</span>
           </div>
 
           <div className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2.5 py-0.8 text-rose-700 dark:text-rose-300 border border-rose-500/20">
             <ShieldCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-500" />
-            <span>Pagos seguros</span>
+            <span>{t('artist_secure_payments')}</span>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Commission } from '@/lib/types';
 import { SampleMosaic } from './sample-mosaic';
 import { useApp } from '@/context/app-context';
+import { useLanguage } from '@/context/language-context';
 import { formatCurrency } from '@/lib/utils';
 import { ChevronDown, ChevronUp, Truck, ArrowRight, ShoppingBag } from 'lucide-react';
 
@@ -14,6 +15,7 @@ interface CommissionCardProps {
 
 export const CommissionCard: React.FC<CommissionCardProps> = ({ commission, onOpenModal }) => {
   const { currency } = useApp();
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const priceText = commission.priceMax
@@ -59,12 +61,12 @@ export const CommissionCard: React.FC<CommissionCardProps> = ({ commission, onOp
                   : 'bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400'
               }`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${commission.slotsAvailable > 0 ? 'bg-emerald-500' : 'bg-neutral-400'}`} />
-                <span>{commission.slotsAvailable} slots available</span>
+                <span>{t('catalog_slots_left', { count: commission.slotsAvailable })}</span>
               </span>
 
               <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-2 py-0.8 font-semibold text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                 <Truck className="h-3 w-3" />
-                <span>{commission.deliveryDays} days</span>
+                <span>{t('catalog_days', { days: commission.deliveryDays })}</span>
               </span>
             </div>
 
@@ -72,14 +74,14 @@ export const CommissionCard: React.FC<CommissionCardProps> = ({ commission, onOp
             <div className="mt-3 pt-2.5 border-t border-neutral-100 dark:border-neutral-800">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
-                  Additional Information:
+                  {t('catalog_additional_info')}
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="inline-flex items-center gap-1 rounded-md bg-rose-50 dark:bg-neutral-800 px-2 py-0.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-neutral-700 transition-colors"
+                  className="inline-flex items-center gap-1 rounded-md bg-rose-50 dark:bg-neutral-800 px-2 py-0.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
                 >
-                  <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
+                  <span>{isExpanded ? t('catalog_collapse') : t('catalog_expand')}</span>
                   {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                 </button>
               </div>
@@ -100,16 +102,16 @@ export const CommissionCard: React.FC<CommissionCardProps> = ({ commission, onOp
           {/* Action Button */}
           <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
             <span className="text-[11px] text-neutral-400 font-medium hidden sm:inline">
-              Incluye 2 revisiones de boceto
+              {t('catalog_includes_sketches')}
             </span>
 
             <button
               type="button"
               onClick={() => onOpenModal(commission, 0)}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition-all active:scale-95 group/btn"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition-all active:scale-95 group/btn cursor-pointer"
             >
               <ShoppingBag className="h-4 w-4 text-white shrink-0" />
-              <span>Solicitar Comisión</span>
+              <span>{t('catalog_order_commission')}</span>
               <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-0.5 transition-transform shrink-0" />
             </button>
           </div>

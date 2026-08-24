@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/cart-context';
 import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import { Order } from '@/lib/types';
 import { formatCurrency, USD_TO_ARS_RATE } from '@/lib/utils';
 import {
@@ -36,6 +37,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const { items, subtotal: total, clearCart } = useCart();
   const { currency, addOrder } = useApp();
   const { user } = useAuth();
+  const { t, language } = useLanguage();
 
   const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'polar' | 'test'>(
     currency === 'ARS' ? 'mercadopago' : 'polar'
@@ -67,12 +69,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
     e.preventDefault();
 
     if (!customerEmail.trim() || !customerName.trim()) {
-      setError('Por favor completa tu nombre y correo de entrega.');
+      setError(t('checkout_fill_error'));
       return;
     }
 
     if (items.length === 0) {
-      setError('Tu carrito de compras está vacío.');
+      setError(t('checkout_empty_cart_error'));
       return;
     }
 
@@ -178,10 +180,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold tracking-wider text-neutral-900 dark:text-white">
-                Confirmar Encargo & Pago
+                {t('checkout_title')}
               </h3>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Total a abonar: <strong className="text-rose-600 dark:text-rose-400">{formatCurrency(total, currency)}</strong>
+                {t('checkout_total_to_charge')}{' '}
+                <strong className="text-rose-600 dark:text-rose-400">{formatCurrency(total, currency)}</strong>
               </p>
             </div>
           </div>
@@ -190,7 +193,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             {/* Payment Gateway Selector */}
             <div className="space-y-1.5">
               <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Método de Pago
+                {t('checkout_payment_method')}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {/* Mercado Pago */}
@@ -211,7 +214,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     )}
                   </div>
                   <span className="text-[10px] text-neutral-500 mt-0.5">
-                    Tarjetas, Débito, Transferencia y Dinero en cuenta
+                    {t('checkout_mp_desc')}
                   </span>
                 </div>
 
@@ -233,7 +236,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     )}
                   </div>
                   <span className="text-[10px] text-neutral-500 mt-0.5">
-                    Pagos internacionales (Stripe, Tarjetas globales)
+                    {t('checkout_polar_desc')}
                   </span>
                 </div>
               </div>
@@ -241,6 +244,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {/* Testing / Sandbox Option */}
               <div
                 onClick={() => setPaymentMethod('test')}
+                data-testid="payment-method-test"
                 className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition-all text-xs ${
                   paymentMethod === 'test'
                     ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500 font-bold'
@@ -250,8 +254,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <div className="flex items-center gap-2">
                   <FlaskConical className="h-4 w-4 text-amber-500" />
                   <div>
-                    <p className="text-[11px] font-bold">Modo Test / Compra de Prueba</p>
-                    <p className="text-[10px] text-neutral-400 font-normal">Crea el pedido directamente sin cobrar tarjeta para testear Trello y Chat.</p>
+                    <p className="text-[11px] font-bold">{t('checkout_test_mode')}</p>
+                    <p className="text-[10px] text-neutral-400 font-normal">{t('checkout_test_mode_desc')}</p>
                   </div>
                 </div>
                 {paymentMethod === 'test' && <CheckCircle2 className="h-4 w-4 text-amber-500" />}
@@ -263,14 +267,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <div>
                 <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                   <Mail className="h-3.5 w-3.5" />
-                  <span>Email de Entrega & Contacto *</span>
+                  <span>{t('checkout_email_label')}</span>
                 </label>
                 <input
                   type="email"
                   required
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="tu-email@gmail.com"
+                  placeholder={t('checkout_email_placeholder')}
                   className="mt-1 w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/80 px-3.5 py-2 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none transition-all"
                 />
               </div>
@@ -279,27 +283,27 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <div>
                   <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                     <User className="h-3.5 w-3.5" />
-                    <span>Nombre / Nickname *</span>
+                    <span>{t('checkout_name_label')}</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Tu nombre o alias"
+                    placeholder={t('checkout_name_placeholder')}
                     className="mt-1 w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/80 px-3.5 py-2 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none transition-all"
                   />
                 </div>
 
                 <div>
                   <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
-                    <span>Discord (Opcional)</span>
+                    <span>{t('checkout_discord_label')}</span>
                   </label>
                   <input
                     type="text"
                     value={customerDiscord}
                     onChange={(e) => setCustomerDiscord(e.target.value)}
-                    placeholder="@usuario#0000"
+                    placeholder={t('checkout_discord_placeholder')}
                     className="mt-1 w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/80 px-3.5 py-2 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none transition-all"
                   />
                 </div>
@@ -324,17 +328,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Procesando...</span>
+                    <span>{t('checkout_processing')}</span>
                   </>
                 ) : (
                   <>
                     <Lock className="h-4 w-4" />
                     <span>
                       {paymentMethod === 'mercadopago'
-                        ? `Pagar ${formatCurrency(total, 'ARS', liveExchangeRate)} con Mercado Pago`
+                        ? t('checkout_pay_mp', { amount: formatCurrency(total, 'ARS', liveExchangeRate) })
                         : paymentMethod === 'polar'
-                        ? `Pagar $${total} USD con Polar.sh (Stripe)`
-                        : `Confirmar Pedido de Prueba ($${total} USD)`}
+                        ? t('checkout_pay_polar', { amount: total })
+                        : t('checkout_pay_test', { amount: total })}
                     </span>
                   </>
                 )}
@@ -342,15 +346,24 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               {paymentMethod === 'mercadopago' && (
                 <p className="text-[10px] text-neutral-400">
-                  Conversión en vivo (DolarApi • {rateCasa} Venta): <strong>${total} USD</strong> ≈{' '}
-                  <strong className="text-sky-500">{formatCurrency(total, 'ARS', liveExchangeRate)}</strong> (1 USD = ${liveExchangeRate.toLocaleString('es-AR')} ARS)
+                  {language === 'en' ? (
+                    <>
+                      Live conversion (DolarApi • {rateCasa} Selling): <strong>${total} USD</strong> ≈{' '}
+                      <strong className="text-sky-500">{formatCurrency(total, 'ARS', liveExchangeRate)}</strong> (1 USD = ${liveExchangeRate.toLocaleString('es-AR')} ARS)
+                    </>
+                  ) : (
+                    <>
+                      Conversión en vivo (DolarApi • {rateCasa} Venta): <strong>${total} USD</strong> ≈{' '}
+                      <strong className="text-sky-500">{formatCurrency(total, 'ARS', liveExchangeRate)}</strong> (1 USD = ${liveExchangeRate.toLocaleString('es-AR')} ARS)
+                    </>
+                  )}
                 </p>
               )}
             </div>
 
             <div className="flex items-center justify-center gap-2 text-[10px] text-neutral-400">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              <span>Transacción protegida y cifrada con SSL</span>
+              <span>{t('checkout_ssl_secure')}</span>
             </div>
           </form>
         </div>

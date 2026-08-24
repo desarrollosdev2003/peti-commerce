@@ -19,15 +19,18 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { LanguageToggle } from '@/components/ui/language-toggle';
 import { useCart } from '@/context/cart-context';
 import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 
 export const Navbar = () => {
   const pathname = usePathname();
   const { totalItems, setIsCartOpen } = useCart();
   const { artist, currency, setCurrency } = useApp();
   const { user, logout, setIsAuthModalOpen } = useAuth();
+  const { t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
@@ -52,11 +55,11 @@ export const Navbar = () => {
                 {artist.name}
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.2 text-[9px] sm:text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Open
+                  {t('nav_open')}
                 </span>
               </span>
               <span className="text-[10px] sm:text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
-                Commissions & Store
+                {t('nav_commissions_store')}
               </span>
             </div>
           </Link>
@@ -71,7 +74,7 @@ export const Navbar = () => {
                   : 'text-neutral-600 hover:text-rose-600 dark:text-neutral-400 dark:hover:text-rose-400'
               }`}
             >
-              Comisiones
+              {t('nav_commissions')}
             </Link>
 
             <Link
@@ -83,7 +86,7 @@ export const Navbar = () => {
               }`}
             >
               <Search className="h-3.5 w-3.5" />
-              Seguimiento
+              {t('nav_tracking')}
             </Link>
 
             {/* Mis Pedidos (Only shown if user is logged in or active in account) */}
@@ -97,7 +100,7 @@ export const Navbar = () => {
                 }`}
               >
                 <Package className="h-3.5 w-3.5" />
-                Mis Pedidos & Chat
+                {t('nav_my_orders')}
               </Link>
             )}
 
@@ -110,7 +113,7 @@ export const Navbar = () => {
               }`}
             >
               <FileText className="h-3.5 w-3.5" />
-              Términos
+              {t('nav_terms')}
             </Link>
 
             {/* Admin Panel (Only shown if user has admin role or is currently on /admin) */}
@@ -124,7 +127,7 @@ export const Navbar = () => {
                 }`}
               >
                 <LayoutDashboard className="h-3.5 w-3.5" />
-                Admin
+                {t('nav_admin')}
               </Link>
             )}
           </nav>
@@ -132,14 +135,17 @@ export const Navbar = () => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2.5">
+          {/* Language Toggle Button */}
+          <LanguageToggle />
+
           {/* Currency switch */}
           <button
             onClick={() => setCurrency(currency === 'USD' ? 'ARS' : 'USD')}
-            className="flex items-center gap-0.5 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold border border-rose-200/80 dark:border-neutral-800 hover:bg-rose-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300 transition-colors"
-            title="Cambiar moneda"
+            className="flex items-center gap-0.5 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-semibold border border-rose-200/80 dark:border-neutral-800 hover:bg-rose-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300 transition-colors shadow-2xs"
+            title={t('nav_currency')}
           >
             <span className="font-bold text-rose-500 dark:text-rose-400">$</span>
-            <span className="text-[11px] font-mono">{currency}</span>
+            <span className="text-[11px] font-mono font-bold">{currency}</span>
           </button>
 
           <ThemeToggle />
@@ -147,11 +153,11 @@ export const Navbar = () => {
           {/* Cart Trigger */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative flex items-center gap-1.5 rounded-xl bg-neutral-900 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold text-white shadow-sm hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 transition-all active:scale-95"
+            className="relative flex items-center gap-1.5 rounded-xl bg-neutral-900 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold text-white shadow-sm hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 transition-all active:scale-95 cursor-pointer"
             aria-label="Ver carrito"
           >
             <ShoppingBag className="h-4 w-4 shrink-0" />
-            <span className="hidden sm:inline">Carrito</span>
+            <span className="hidden sm:inline">{t('nav_cart')}</span>
             {totalItems > 0 && (
               <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[10px] sm:text-[11px] font-bold text-white shadow-sm animate-in zoom-in">
                 {totalItems}
@@ -201,7 +207,7 @@ export const Navbar = () => {
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors"
                   >
                     <Package className="h-3.5 w-3.5 text-rose-500" />
-                    <span>Mis Pedidos</span>
+                    <span>{t('nav_user_orders')}</span>
                   </Link>
 
                   <Link
@@ -209,7 +215,7 @@ export const Navbar = () => {
                     className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors"
                   >
                     <MessageSquare className="h-3.5 w-3.5 text-rose-500" />
-                    <span>Centro de Chats</span>
+                    <span>{t('nav_user_chats')}</span>
                   </Link>
 
                   {user.role === 'admin' && (
@@ -218,7 +224,7 @@ export const Navbar = () => {
                       className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-neutral-800 transition-colors"
                     >
                       <LayoutDashboard className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>Panel Admin (Peti)</span>
+                      <span>{t('nav_admin')}</span>
                     </Link>
                   )}
 
@@ -227,7 +233,7 @@ export const Navbar = () => {
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors text-left border-t border-neutral-100 dark:border-neutral-800"
                   >
                     <LogOut className="h-3.5 w-3.5" />
-                    <span>Cerrar Sesión</span>
+                    <span>{t('nav_logout')}</span>
                   </button>
                 </div>
               )}
@@ -238,7 +244,7 @@ export const Navbar = () => {
               className="flex items-center gap-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold transition-colors"
             >
               <User className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Acceder</span>
+              <span className="hidden sm:inline">{t('nav_signin')}</span>
             </button>
           )}
 
@@ -267,9 +273,9 @@ export const Navbar = () => {
           >
             <span className="flex items-center gap-2">
               <Palette className="h-4 w-4 text-rose-500" />
-              Catálogo de Comisiones
+              {t('nav_menu_catalog')}
             </span>
-            <span className="text-[10px] text-emerald-500 font-semibold">Abiertas</span>
+            <span className="text-[10px] text-emerald-500 font-semibold">{t('nav_menu_open_badge')}</span>
           </Link>
 
           {user && (
@@ -284,7 +290,7 @@ export const Navbar = () => {
             >
               <span className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-rose-500" />
-                Mis Pedidos & Chat
+                {t('nav_my_orders')}
               </span>
               <span className="text-[10px] text-rose-500 font-semibold">{user.name}</span>
             </Link>
@@ -301,7 +307,7 @@ export const Navbar = () => {
           >
             <span className="flex items-center gap-2">
               <Search className="h-4 w-4 text-rose-500" />
-              Seguimiento de Pedido
+              {t('nav_menu_tracking')}
             </span>
             <MessageSquare className="h-4 w-4 text-emerald-500" />
           </Link>
@@ -317,7 +323,7 @@ export const Navbar = () => {
           >
             <span className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-rose-500" />
-              Términos del Servicio
+              {t('nav_menu_terms')}
             </span>
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
           </Link>
@@ -334,7 +340,7 @@ export const Navbar = () => {
             >
               <span className="flex items-center gap-2">
                 <LayoutDashboard className="h-4 w-4 text-emerald-500" />
-                Panel de Artista (Mini Trello)
+                {t('nav_menu_admin')}
               </span>
               <span className="text-[10px] rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 font-bold">
                 Admin

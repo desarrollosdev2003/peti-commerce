@@ -1,8 +1,13 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
-import { Palette, Heart, ShieldCheck, Code, ExternalLink } from 'lucide-react';
+import { Palette, Heart, ShieldCheck, ExternalLink } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 export const Footer = () => {
+  const { t, language } = useLanguage();
+
   return (
     <footer className="w-full border-t border-rose-100/80 bg-rose-50/20 dark:border-neutral-800/80 dark:bg-neutral-950/60 py-10 transition-colors">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 space-y-8">
@@ -16,24 +21,24 @@ export const Footer = () => {
                 Peti E-commerce • Art Commissions
               </p>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Plataforma de comisiones artísticas y pagos seguros
+                {t('footer_tagline')}
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-neutral-600 dark:text-neutral-400 font-medium">
             <Link href="/" className="hover:text-rose-500 transition-colors">
-              Comisiones
+              {t('nav_commissions')}
             </Link>
             <Link href="/track" className="hover:text-rose-500 transition-colors">
-              Seguimiento de Pedido
+              {t('nav_tracking')}
             </Link>
             <Link href="/terms" className="hover:text-rose-500 transition-colors flex items-center gap-1">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              Términos del Servicio
+              {t('nav_terms')}
             </Link>
             <Link href="/admin" className="hover:text-rose-500 transition-colors">
-              Panel Artista
+              {t('nav_admin')}
             </Link>
           </div>
         </div>
@@ -41,11 +46,11 @@ export const Footer = () => {
         {/* Developer Credit & Copyright Row */}
         <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800/60 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-neutral-500 text-center md:text-left">
           <div className="space-y-1">
-            <p>© {new Date().getFullYear()} Peti commissions. Todos los derechos reservados.</p>
+            <p>© {new Date().getFullYear()} Peti commissions. {t('footer_rights')}</p>
             <p className="flex items-center justify-center md:justify-start gap-1 text-[11px] text-neutral-500 dark:text-neutral-400">
-              <span>Diseñado y Desarrollado con</span>
+              <span>{t('footer_developed_with')}</span>
               <Heart className="h-3 w-3 text-rose-500 fill-rose-500" />
-              <span>por</span>
+              <span>{t('footer_by')}</span>
               <a
                 href="https://github.com/FrancoBerlochi"
                 target="_blank"
@@ -59,7 +64,7 @@ export const Footer = () => {
           </div>
 
           <div className="flex items-center gap-2 text-[11px]">
-            <span>Pagos procesados por</span>
+            <span>{language === 'en' ? 'Payments processed by' : 'Pagos procesados por'}</span>
             <span className="font-semibold text-sky-500">Mercado Pago</span>
             <span>&</span>
             <span className="font-semibold text-purple-500">Polar.sh</span>

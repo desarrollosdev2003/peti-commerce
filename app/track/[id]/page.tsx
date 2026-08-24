@@ -10,6 +10,7 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { uploadImageFile } from '@/lib/services/upload-service';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { useCart } from '@/context/cart-context';
+import { useLanguage } from '@/context/language-context';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -30,13 +31,6 @@ import {
   Radio,
 } from 'lucide-react';
 
-const PROGRESS_STEPS: { id: OrderStatus; label: string; desc: string }[] = [
-  { id: 'pending', label: '1. En Cola / Pendiente', desc: 'Validación de briefing y referencias' },
-  { id: 'in_progress', label: '2. Boceto Preliminar', desc: 'Composición, pose y anatomía' },
-  { id: 'in_review', label: '3. En Revisión', desc: 'Aprobación de boceto y color base' },
-  { id: 'completed', label: '4. Finalizado', desc: 'Entrega de archivos en alta resolución' },
-];
-
 const formatMessageTime = (dateStr?: string) => {
   if (!dateStr) return '';
   const d = new Date(dateStr);
@@ -52,7 +46,15 @@ export default function OrderTrackingPage() {
   const { orders, getOrder, addOrderMessage, updateOrderStatus, artist, currency } = useApp();
   const { user, isAdmin } = useAuth();
   const { clearCart } = useCart();
+  const { t, language } = useLanguage();
   const [order, setOrder] = useState<Order | null>(null);
+
+  const PROGRESS_STEPS: { id: OrderStatus; label: string; desc: string }[] = [
+    { id: 'pending', label: t('track_step_1_title'), desc: t('track_step_1_desc') },
+    { id: 'in_progress', label: t('track_step_2_title'), desc: t('track_step_2_desc') },
+    { id: 'in_review', label: t('track_step_3_title'), desc: t('track_step_3_desc') },
+    { id: 'completed', label: t('track_step_4_title'), desc: t('track_step_4_desc') },
+  ];
 
   // Determine if the current viewer is the Admin (Peti) or Customer
   const isViewerAdmin = Boolean(
@@ -281,18 +283,18 @@ export default function OrderTrackingPage() {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-rose-500 transition-colors mb-1.5"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Consultar otro pedido</span>
+            <span>{language === 'en' ? 'Check another order' : 'Consultar otro pedido'}</span>
           </Link>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-wider text-neutral-900 dark:text-white font-mono">
-              Pedido {order.orderNumber}
+              {language === 'en' ? 'Order' : 'Pedido'} {order.orderNumber}
             </h1>
             <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
               order.status === 'completed'
                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                 : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
             }`}>
-              {order.status === 'completed' ? 'Completado' : 'En Avance'}
+              {order.status === 'completed' ? (language === 'en' ? 'Completed' : 'Completado') : (language === 'en' ? 'In Progress' : 'En Avance')}
             </span>
 
             {/* Live Realtime Pulsing Indicator */}
@@ -301,7 +303,7 @@ export default function OrderTrackingPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <span>En vivo</span>
+              <span>{language === 'en' ? 'Live' : 'En vivo'}</span>
             </span>
           </div>
         </div>
@@ -320,7 +322,7 @@ export default function OrderTrackingPage() {
               <CheckCircle2 className="h-3 w-3 text-rose-500 fill-rose-500/20" />
             </p>
             <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-              Artista Asignada • En línea
+              {language === 'en' ? 'Assigned Artist • Online' : 'Artista Asignada • En línea'}
             </p>
           </div>
         </div>
@@ -351,7 +353,7 @@ export default function OrderTrackingPage() {
                       ? 'text-emerald-600 dark:text-emerald-400'
                       : 'text-neutral-400'
                   }`}>
-                    Paso {idx + 1}
+                    {language === 'en' ? `Step ${idx + 1}` : `Paso ${idx + 1}`}
                   </span>
                   {isPassed ? (
                     <CheckCircle2 className="h-4 w-4 text-emerald-500 animate-in zoom-in-50" />
@@ -363,7 +365,7 @@ export default function OrderTrackingPage() {
                   ) : null}
                 </div>
                 <h4 className="font-bold text-xs text-neutral-900 dark:text-white mt-1.5">
-                  {step.label.split('. ')[1]}
+                  {step.label.includes('. ') ? step.label.split('. ')[1] : step.label}
                 </h4>
                 <p className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-0.5 leading-tight">
                   {step.desc}
@@ -382,7 +384,7 @@ export default function OrderTrackingPage() {
           {/* Order Details Card */}
           <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 space-y-4 shadow-xs">
             <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-              Detalles del Encargo
+              {language === 'en' ? 'Order Details' : 'Detalles del Encargo'}
             </h3>
 
             {order.items.map((item, idx) => (
@@ -401,7 +403,9 @@ export default function OrderTrackingPage() {
                     {formatCurrency(item.unitPrice, currency)}
                   </p>
                   <span className="inline-block rounded-md bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.2 text-[10px] font-medium text-neutral-600 dark:text-neutral-400">
-                    {item.commissionData.usageType === 'commercial' ? 'Uso Comercial (+50%)' : 'Uso Personal'}
+                    {item.commissionData.usageType === 'commercial'
+                      ? (language === 'en' ? 'Commercial Use (+50%)' : 'Uso Comercial (+50%)')
+                      : (language === 'en' ? 'Personal Use' : 'Uso Personal')}
                   </span>
                 </div>
               </div>
@@ -410,7 +414,7 @@ export default function OrderTrackingPage() {
             {/* Briefing Recap */}
             <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-950 p-3.5 space-y-1.5 text-xs text-neutral-700 dark:text-neutral-300 border border-neutral-200/80 dark:border-neutral-800">
               <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
-                Tu Briefing & Concepto:
+                {language === 'en' ? 'Your Briefing & Concept:' : 'Tu Briefing & Concepto:'}
               </span>
               <p className="leading-relaxed text-xs">
                 &quot;{order.items[0]?.commissionData?.brief}&quot;
@@ -432,7 +436,7 @@ export default function OrderTrackingPage() {
 
             {/* Financial summary */}
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs">
-              <span className="text-neutral-500 font-medium">Total Abonado:</span>
+              <span className="text-neutral-500 font-medium">{language === 'en' ? 'Total Paid:' : 'Total Abonado:'}</span>
               <span className="font-extrabold text-sm text-neutral-900 dark:text-white">
                 {formatCurrency(order.total, currency)}
               </span>
@@ -445,11 +449,13 @@ export default function OrderTrackingPage() {
               <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                 <Sparkles className="h-5 w-5" />
                 <h3 className="text-sm font-bold tracking-wider">
-                  ¡Tus Archivos Finales Están Listos!
+                  {language === 'en' ? 'Your Final Files Are Ready!' : '¡Tus Archivos Finales Están Listos!'}
                 </h3>
               </div>
               <p className="text-xs text-neutral-600 dark:text-neutral-300">
-                Descarga tus ilustraciones en resolución completa sin marcas de agua:
+                {language === 'en'
+                  ? 'Download your high-resolution illustrations without watermarks:'
+                  : 'Descarga tus ilustraciones en resolución completa sin marcas de agua:'}
               </p>
               <div className="space-y-2 pt-1">
                 {order.deliveredFiles.map((file, idx) => (
@@ -489,9 +495,9 @@ export default function OrderTrackingPage() {
               </div>
               <div>
                 <h4 className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1">
-                  Chat directo con {artist.name}
+                  {t('track_chat_with', { artist: artist.name })}
                 </h4>
-                <p className="text-[10px] text-neutral-400">Canal privado de orden</p>
+                <p className="text-[10px] text-neutral-400">{language === 'en' ? 'Private order channel' : 'Canal privado de orden'}</p>
               </div>
             </div>
 
@@ -499,10 +505,10 @@ export default function OrderTrackingPage() {
             {order.status === 'in_progress' && (
               <button
                 onClick={handleApproveSketch}
-                className="flex items-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition-all active:scale-95"
+                className="flex items-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition-all active:scale-95 cursor-pointer"
               >
                 <ThumbsUp className="h-3.5 w-3.5" />
-                <span>Aprobar Boceto</span>
+                <span>{language === 'en' ? 'Approve Sketch' : 'Aprobar Boceto'}</span>
               </button>
             )}
           </div>
@@ -549,16 +555,16 @@ export default function OrderTrackingPage() {
                       <div className="flex items-center gap-1.5 mb-1 px-1 text-[11px]">
                         {isMsgFromArtist ? (
                           <span className="font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1">
-                            <span>{isMe ? 'Tú (Peti ✨)' : 'Peti (Artista ✨)'}</span>
+                            <span>{isMe ? (language === 'en' ? 'You (Peti ✨)' : 'Tú (Peti ✨)') : (language === 'en' ? 'Peti (Artist ✨)' : 'Peti (Artista ✨)')}</span>
                             <span className="text-[9px] bg-rose-500/10 text-rose-600 dark:text-rose-400 px-1.5 py-0.2 rounded-md font-bold uppercase">
-                              Artista
+                              {language === 'en' ? 'Artist' : 'Artista'}
                             </span>
                           </span>
                         ) : (
                           <span className="font-extrabold text-sky-600 dark:text-sky-400 flex items-center gap-1">
-                            <span>{isMe ? `Tú (${msg.senderName || order.customerName})` : (msg.senderName || order.customerName)}</span>
+                            <span>{isMe ? `${language === 'en' ? 'You' : 'Tú'} (${msg.senderName || order.customerName})` : (msg.senderName || order.customerName)}</span>
                             <span className="text-[9px] bg-sky-500/10 text-sky-600 dark:text-sky-400 px-1.5 py-0.2 rounded-md font-bold uppercase">
-                              Cliente
+                              {language === 'en' ? 'Customer' : 'Cliente'}
                             </span>
                           </span>
                         )}
@@ -587,7 +593,7 @@ export default function OrderTrackingPage() {
                               className="max-h-60 w-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[11px] font-bold transition-opacity">
-                              Hacer clic para ampliar
+                              {language === 'en' ? 'Click to expand' : 'Hacer clic para ampliar'}
                             </div>
                           </div>
                         )}
@@ -603,7 +609,7 @@ export default function OrderTrackingPage() {
               })
             ) : (
               <div className="h-full flex items-center justify-center text-xs text-neutral-400">
-                Inicia la conversación con Peti...
+                {language === 'en' ? 'Start conversation with Peti...' : 'Inicia la conversación con Peti...'}
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -626,8 +632,8 @@ export default function OrderTrackingPage() {
               type="button"
               disabled={isUploading}
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-rose-500 hover:border-rose-500 transition-colors shrink-0"
-              title="Adjuntar imagen de referencia"
+              className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-rose-500 hover:border-rose-500 transition-colors shrink-0 cursor-pointer"
+              title={language === 'en' ? 'Attach reference image' : 'Adjuntar imagen de referencia'}
             >
               {isUploading ? <RefreshCw className="h-4 w-4 animate-spin text-rose-500" /> : <Paperclip className="h-4 w-4" />}
             </button>
@@ -638,8 +644,8 @@ export default function OrderTrackingPage() {
               onChange={(e) => setInputText(e.target.value)}
               placeholder={
                 isViewerAdmin
-                  ? "Escribe un mensaje o respuesta como Peti (Artista)..."
-                  : "Escribe tu mensaje o consulta para Peti..."
+                  ? (language === 'en' ? 'Write a message as Peti (Artist)...' : 'Escribe un mensaje o respuesta como Peti (Artista)...')
+                  : t('track_input_placeholder')
               }
               className="flex-1 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 px-3.5 py-2.5 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none"
             />
@@ -647,7 +653,7 @@ export default function OrderTrackingPage() {
             <button
               type="submit"
               disabled={!inputText.trim()}
-              className="rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 p-2.5 text-white shadow-md shadow-rose-600/20 disabled:opacity-40 transition-all shrink-0"
+              className="rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 p-2.5 text-white shadow-md shadow-rose-600/20 disabled:opacity-40 transition-all shrink-0 cursor-pointer"
             >
               <Send className="h-4 w-4" />
             </button>

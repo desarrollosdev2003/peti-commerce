@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Montserrat, Lato } from "next/font/google";
 import { ThemeProvider } from "./providers/theme-provider";
+import { LanguageProvider } from "@/context/language-context";
 import { AppProvider } from "@/context/app-context";
 import { CartProvider } from "@/context/cart-context";
 import { AuthProvider } from "@/context/auth-context";
@@ -43,19 +44,21 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            <AppProvider>
-              <CartProvider>
-                <Navbar />
-                <div className="flex-1">
-                  {children}
-                </div>
-                <CartSheet />
-                <AuthModal />
-                <Footer />
-              </CartProvider>
-            </AppProvider>
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <AppProvider>
+                <CartProvider>
+                  <Navbar />
+                  <div className="flex-1">
+                    {children}
+                  </div>
+                  <CartSheet />
+                  <AuthModal />
+                  <Footer />
+                </CartProvider>
+              </AppProvider>
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

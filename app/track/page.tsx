@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '@/context/app-context';
+import { useLanguage } from '@/context/language-context';
 import {
   Search,
   ArrowLeft,
@@ -19,6 +20,7 @@ import { formatDate } from '@/lib/utils';
 export default function TrackSearchPage() {
   const router = useRouter();
   const { orders } = useApp();
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
 
@@ -26,7 +28,7 @@ export default function TrackSearchPage() {
     e.preventDefault();
     const cleanQuery = searchTerm.trim().replace('#', '');
     if (!cleanQuery) {
-      setError('Por favor ingresa un número de pedido o correo.');
+      setError(language === 'en' ? 'Please enter an order number or email.' : 'Por favor ingresa un número de pedido o correo.');
       return;
     }
 
@@ -40,7 +42,11 @@ export default function TrackSearchPage() {
     if (found) {
       router.push(`/track/${found.orderNumber.replace('#', '')}`);
     } else {
-      setError(`No encontramos ningún encargo con el código "${searchTerm}". Verifica tu número de pedido.`);
+      setError(
+        language === 'en'
+          ? `Could not find any order with code "${searchTerm}". Please verify your order number.`
+          : `No encontramos ningún encargo con el código "${searchTerm}". Verifica tu número de pedido.`
+      );
     }
   };
 
@@ -52,7 +58,7 @@ export default function TrackSearchPage() {
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-rose-500 transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        <span>Volver a la Tienda</span>
+        <span>{language === 'en' ? 'Back to Store' : 'Volver a la Tienda'}</span>
       </Link>
 
       {/* Header Banner */}
@@ -61,10 +67,12 @@ export default function TrackSearchPage() {
           <Package className="h-6 w-6" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wider text-neutral-900 dark:text-white">
-          Seguimiento de Encargos & Chat
+          {t('track_title')}
         </h1>
         <p className="max-w-md mx-auto text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-          Ingresa tu número de pedido (ej: <strong className="text-rose-500 font-mono">#PETI-8901</strong>) o tu correo para ver el avance y chatear con Peti.
+          {language === 'en'
+            ? 'Enter your order number (e.g. #PETI-8901) or email to track progress and chat with Peti.'
+            : 'Ingresa tu número de pedido (ej: #PETI-8901) o tu correo para ver el avance y chatear con Peti.'}
         </p>
 
         {/* Search Bar Form */}
@@ -77,15 +85,15 @@ export default function TrackSearchPage() {
                 setSearchTerm(e.target.value);
                 setError('');
               }}
-              placeholder="Ej: #PETI-8901 o tu-email@gmail.com"
+              placeholder={t('track_search_placeholder')}
               className="w-full rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 py-3.5 pl-11 pr-24 text-xs sm:text-sm font-mono text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none transition-all shadow-inner"
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition-all active:scale-95"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition-all active:scale-95 cursor-pointer"
             >
-              Buscar
+              {language === 'en' ? 'Search' : 'Buscar'}
             </button>
           </div>
 
@@ -101,7 +109,7 @@ export default function TrackSearchPage() {
       {orders.length > 0 && (
         <div className="space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 block text-center sm:text-left">
-            Tus Encargos Recientes
+            {language === 'en' ? 'Your Recent Orders' : 'Tus Encargos Recientes'}
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {orders.slice(0, 4).map((ord) => (
@@ -124,7 +132,7 @@ export default function TrackSearchPage() {
                         ? 'bg-blue-500/15 text-blue-600'
                         : 'bg-rose-500/15 text-rose-600'
                     }`}>
-                      {ord.status === 'completed' ? 'Completado' : ord.status === 'in_review' ? 'En Revisión' : ord.status === 'in_progress' ? 'En Proceso' : 'Pendiente'}
+                      {ord.status === 'completed' ? (language === 'en' ? 'Completed' : 'Completado') : ord.status === 'in_review' ? (language === 'en' ? 'In Review' : 'En Revisión') : ord.status === 'in_progress' ? (language === 'en' ? 'In Progress' : 'En Proceso') : (language === 'en' ? 'Pending' : 'Pendiente')}
                     </span>
                   </div>
                   <p className="text-xs text-neutral-500">{ord.customerName} • {ord.items[0]?.title}</p>

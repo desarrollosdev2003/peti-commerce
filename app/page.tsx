@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/app-context';
+import { useLanguage } from '@/context/language-context';
 import { Commission } from '@/lib/types';
 import { ArtistHeader } from '@/components/artistree/artist-header';
 import { CommissionCard } from '@/components/artistree/commission-card';
@@ -11,6 +12,7 @@ import { LayoutGrid, List, Sparkles, ShieldCheck } from 'lucide-react';
 
 export default function HomePage() {
   const { commissions } = useApp();
+  const { t, language } = useLanguage();
 
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
   const [modalInitialImageIdx, setModalInitialImageIdx] = useState(0);
@@ -55,7 +57,7 @@ export default function HomePage() {
                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-rose-600 dark:hover:text-rose-400'
                 }`}
               >
-                {cat === 'all' ? 'Todas las Comisiones' : cat}
+                {cat === 'all' ? (language === 'en' ? 'All Commissions' : 'Todas las Comisiones') : cat}
               </button>
             ))}
           </div>
@@ -82,7 +84,7 @@ export default function HomePage() {
                   ? 'bg-white dark:bg-neutral-900 text-rose-600 dark:text-rose-400 shadow-xs font-bold'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
               }`}
-              title="Vista en cuadrícula (4 cols desktop / 2 cols mobile)"
+              title="Vista en cuadrícula"
             >
               <LayoutGrid className="h-3.5 w-3.5" />
               <span>Grid</span>
@@ -95,7 +97,7 @@ export default function HomePage() {
         {filteredCommissions.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800 p-12 text-center space-y-3">
             <p className="text-sm font-semibold text-neutral-500">
-              No hay comisiones activas en esta categoría en este momento.
+              {t('catalog_no_results')}
             </p>
           </div>
         ) : viewMode === 'artistree' ? (
@@ -128,14 +130,26 @@ export default function HomePage() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <h3 className="text-base font-bold tracking-wider text-neutral-900 dark:text-white">
-            ¿Cómo funciona el proceso de encargo?
+            {language === 'en' ? 'How does the commission process work?' : '¿Cómo funciona el proceso de encargo?'}
           </h3>
           <p className="max-w-xl mx-auto text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            1. Selecciona la comisión y envía tu briefing con referencias visuales.
-            <br />
-            2. Realiza el pago seguro vía <strong>Mercado Pago</strong> o <strong>Polar.sh</strong>.
-            <br />
-            3. Recibe los primeros bocetos para validar poses y realiza 2 rondas de revisiones gratuitas hasta la entrega en alta calidad.
+            {language === 'en' ? (
+              <>
+                1. Select your desired commission type and submit your briefing with visual references.
+                <br />
+                2. Complete secure checkout with <strong>Mercado Pago</strong> or <strong>Polar.sh (Stripe)</strong>.
+                <br />
+                3. Receive early sketches to review poses and enjoy 2 rounds of revisions until final high-res delivery.
+              </>
+            ) : (
+              <>
+                1. Selecciona la comisión y envía tu briefing con referencias visuales.
+                <br />
+                2. Realiza el pago seguro vía <strong>Mercado Pago</strong> o <strong>Polar.sh</strong>.
+                <br />
+                3. Recibe los primeros bocetos para validar poses y realiza 2 rondas de revisiones gratuitas hasta la entrega en alta calidad.
+              </>
+            )}
           </p>
         </div>
 

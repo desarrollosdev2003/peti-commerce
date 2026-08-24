@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
+import { useLanguage } from '@/context/language-context';
 import {
   X,
   Mail,
@@ -27,6 +28,7 @@ export const AuthModal = () => {
     registerCustomerWithPassword,
     loginAdminWithPassword,
   } = useAuth();
+  const { t, language } = useLanguage();
 
   // Role Tab: 'customer' vs 'admin'
   const [roleTab, setRoleTab] = useState<'customer' | 'admin'>('customer');
@@ -68,12 +70,12 @@ export const AuthModal = () => {
     setCustomerSuccess('');
 
     if (!customerEmail.trim() || !customerPassword.trim()) {
-      setCustomerError('Por favor completa todos los campos requeridos.');
+      setCustomerError(language === 'en' ? 'Please fill in all required fields.' : 'Por favor completa todos los campos requeridos.');
       return;
     }
 
     if (customerMode === 'register' && customerPassword.length < 6) {
-      setCustomerError('La contraseña debe tener al menos 6 caracteres.');
+      setCustomerError(language === 'en' ? 'Password must be at least 6 characters.' : 'La contraseña debe tener al menos 6 caracteres.');
       return;
     }
 
@@ -86,7 +88,7 @@ export const AuthModal = () => {
         setIsAuthModalOpen(false);
         router.push('/account');
       } else {
-        setCustomerError(res.error || 'No se pudo crear la cuenta.');
+        setCustomerError(res.error || (language === 'en' ? 'Could not create account.' : 'No se pudo crear la cuenta.'));
       }
     } else {
       const res = await loginCustomerWithPassword(customerEmail, customerPassword);
@@ -95,7 +97,7 @@ export const AuthModal = () => {
         setIsAuthModalOpen(false);
         router.push('/account');
       } else {
-        setCustomerError(res.error || 'Credenciales inválidas.');
+        setCustomerError(res.error || (language === 'en' ? 'Invalid credentials.' : 'Credenciales inválidas.'));
       }
     }
   };
@@ -115,7 +117,7 @@ export const AuthModal = () => {
       setIsAuthModalOpen(false);
       router.push('/admin');
     } else {
-      setAdminError(res.error || 'Credenciales de administrador incorrectas.');
+      setAdminError(res.error || (language === 'en' ? 'Incorrect admin credentials.' : 'Credenciales de administrador incorrectas.'));
     }
   };
 
@@ -149,7 +151,7 @@ export const AuthModal = () => {
             }`}
           >
             <User className="h-3.5 w-3.5" />
-            <span>Soy Comprador</span>
+            <span>{language === 'en' ? 'Customer' : 'Soy Comprador'}</span>
           </button>
 
           <button
@@ -166,28 +168,28 @@ export const AuthModal = () => {
             }`}
           >
             <Crown className="h-3.5 w-3.5" />
-            <span>Soy el Artista</span>
+            <span>{language === 'en' ? 'Artist (Admin)' : 'Soy el Artista'}</span>
           </button>
         </div>
 
-        {/* ======================================================== */}
-        {/* VIEW 1: CLIENTES / COMPRADORES (Formulario primero, Google después) */}
-        {/* ======================================================== */}
+        {/* VIEW 1: CLIENTES / COMPRADORES */}
         {roleTab === 'customer' ? (
           <div className="space-y-3.5">
             <div className="text-center space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500">
-                Acceso de Clientes
+                {language === 'en' ? 'Customer Access' : 'Acceso de Clientes'}
               </span>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                {customerMode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                {customerMode === 'login' ? t('auth_login_title') : t('auth_register_title')}
               </h3>
               <p className="text-xs text-neutral-500 max-w-xs mx-auto">
-                Accede a tu historial de encargos y chatea en vivo con Peti.
+                {language === 'en'
+                  ? 'Access your order history and chat directly with Peti.'
+                  : 'Accede a tu historial de encargos y chatea en vivo con Peti.'}
               </p>
             </div>
 
-            {/* Mode Switcher: Iniciar Sesión vs Crear Cuenta */}
+            {/* Mode Switcher */}
             <div className="flex rounded-xl bg-neutral-100 dark:bg-neutral-800/60 p-0.5 text-xs">
               <button
                 type="button"
@@ -195,13 +197,13 @@ export const AuthModal = () => {
                   setCustomerMode('login');
                   setCustomerError('');
                 }}
-                className={`flex-1 py-1.5 font-bold rounded-lg transition-all text-[11px] ${
+                className={`flex-1 py-1.5 font-bold rounded-lg transition-all text-[11px] cursor-pointer ${
                   customerMode === 'login'
                     ? 'bg-white dark:bg-neutral-900 text-rose-600 dark:text-rose-400 shadow-xs'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
                 }`}
               >
-                Ya tengo cuenta
+                {language === 'en' ? 'Sign In' : 'Ya tengo cuenta'}
               </button>
               <button
                 type="button"
@@ -209,13 +211,13 @@ export const AuthModal = () => {
                   setCustomerMode('register');
                   setCustomerError('');
                 }}
-                className={`flex-1 py-1.5 font-bold rounded-lg transition-all text-[11px] ${
+                className={`flex-1 py-1.5 font-bold rounded-lg transition-all text-[11px] cursor-pointer ${
                   customerMode === 'register'
                     ? 'bg-white dark:bg-neutral-900 text-rose-600 dark:text-rose-400 shadow-xs'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
                 }`}
               >
-                Crear cuenta nueva
+                {language === 'en' ? 'Create Account' : 'Crear cuenta nueva'}
               </button>
             </div>
 
@@ -224,7 +226,7 @@ export const AuthModal = () => {
               {customerMode === 'register' && (
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                    Tu Nombre o Nickname
+                    {t('auth_name_label')}
                   </label>
                   <div className="relative">
                     <input
@@ -232,7 +234,7 @@ export const AuthModal = () => {
                       required
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Tu nombre"
+                      placeholder={language === 'en' ? 'Your name' : 'Tu nombre'}
                       className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 py-2.5 pl-9 pr-3.5 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none"
                     />
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
@@ -242,7 +244,7 @@ export const AuthModal = () => {
 
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                  Correo Electrónico
+                  {t('auth_email_label')}
                 </label>
                 <div className="relative">
                   <input
@@ -259,7 +261,7 @@ export const AuthModal = () => {
 
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                  Contraseña {customerMode === 'register' && '(Mínimo 6 caracteres)'}
+                  {t('auth_password_label')} {customerMode === 'register' && `(${language === 'en' ? 'Min. 6 chars' : 'Mínimo 6 caracteres'})`}
                 </label>
                 <div className="relative">
                   <input
@@ -296,18 +298,18 @@ export const AuthModal = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Procesando...</span>
+                    <span>{language === 'en' ? 'Processing...' : 'Procesando...'}</span>
                   </>
                 ) : customerMode === 'login' ? (
                   <>
                     <LogIn className="h-4 w-4" />
-                    <span>Entrar a mi Cuenta</span>
+                    <span>{t('auth_login_btn')}</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </>
                 ) : (
                   <>
                     <UserPlus className="h-4 w-4" />
-                    <span>Crear mi Cuenta</span>
+                    <span>{t('auth_register_btn')}</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </>
                 )}
@@ -318,7 +320,7 @@ export const AuthModal = () => {
             <div className="relative flex py-1 items-center">
               <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800" />
               <span className="flex-shrink mx-2 text-[10px] uppercase font-bold text-neutral-400">
-                O continuar con
+                {t('auth_divider')}
               </span>
               <div className="flex-grow border-t border-neutral-200 dark:border-neutral-800" />
             </div>
@@ -350,38 +352,36 @@ export const AuthModal = () => {
                     d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.2L1.9 16C3.7 19.7 7.5 23 12 23z"
                   />
                 </svg>
-                <span>Continuar con Google</span>
+                <span>{t('auth_google_btn')}</span>
               </button>
             </div>
 
             <div className="pt-1 text-center">
               <p className="text-[10px] text-neutral-400 flex items-center justify-center gap-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                <span>Tus datos y compras están protegidos con cifrado SSL.</span>
+                <span>{language === 'en' ? 'Your data and purchases are SSL encrypted and protected.' : 'Tus datos y compras están protegidos con cifrado SSL.'}</span>
               </p>
             </div>
           </div>
         ) : (
-          /* ======================================================== */
-          /* VIEW 2: ARTISTA / ADMIN (Solo Email + Contraseña)       */
-          /* ======================================================== */
+          /* VIEW 2: ARTISTA / ADMIN */
           <div className="space-y-4">
             <div className="text-center space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500">
-                Acceso de Artista
+                {language === 'en' ? 'Artist Access' : 'Acceso de Artista'}
               </span>
               <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                Iniciar Sesión de Administrador
+                {language === 'en' ? 'Artist / Admin Sign In' : 'Iniciar Sesión de Administrador'}
               </h3>
               <p className="text-xs text-neutral-500 max-w-xs mx-auto">
-                Ingresa con tu correo de Peti y tu contraseña registrada en Supabase.
+                {language === 'en' ? 'Sign in with your artist email and registered password.' : 'Ingresa con tu correo de Peti y tu contraseña registrada en Supabase.'}
               </p>
             </div>
 
             <form onSubmit={handleAdminSubmit} className="space-y-3 text-xs text-left">
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                  Correo Electrónico
+                  {t('auth_email_label')}
                 </label>
                 <div className="relative">
                   <input
@@ -398,7 +398,7 @@ export const AuthModal = () => {
 
               <div>
                 <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                  Contraseña de Artista
+                  {language === 'en' ? 'Artist Password' : 'Contraseña de Artista'}
                 </label>
                 <div className="relative">
                   <input
@@ -428,13 +428,13 @@ export const AuthModal = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Verificando...</span>
+                    <span>{language === 'en' ? 'Verifying...' : 'Verificando...'}</span>
                   </>
                 ) : (
                   <>
                     <LogIn className="h-4 w-4" />
-                    <span>Entrar al Panel Admin</span>
-                    <ArrowRight className="h-4 w-4" />
+                    <span>{language === 'en' ? 'Enter Admin Panel' : 'Entrar al Panel Admin'}</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </>
                 )}
               </button>

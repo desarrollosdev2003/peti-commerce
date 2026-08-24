@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Commission, CommissionOption, UsageType } from '@/lib/types';
 import { useCart } from '@/context/cart-context';
 import { useApp } from '@/context/app-context';
+import { useLanguage } from '@/context/language-context';
 import { formatCurrency } from '@/lib/utils';
 import { ShoppingBag, Check, Sparkles, AlertCircle, Link2 } from 'lucide-react';
 
@@ -15,6 +16,7 @@ interface CommissionFormProps {
 export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSuccess }) => {
   const { addItem } = useCart();
   const { currency } = useApp();
+  const { t, language } = useLanguage();
 
   const [usageType, setUsageType] = useState<UsageType>('personal');
   const [brief, setBrief] = useState('');
@@ -44,7 +46,7 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
   const handleAddToCart = (e: React.FormEvent) => {
     e.preventDefault();
     if (!brief.trim()) {
-      setError('Por favor describe tu idea o personaje para la comisión.');
+      setError(t('modal_brief_error'));
       return;
     }
 
@@ -55,7 +57,7 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
       .map((opt) => `${opt.name} (+${formatCurrency(opt.price, currency)})`);
 
     if (usageType === 'commercial') {
-      selectedOptNames.unshift('Uso Comercial Licenciado (+50%)');
+      selectedOptNames.unshift(language === 'en' ? 'Commercial License (+50%)' : 'Uso Comercial Licenciado (+50%)');
     }
 
     addItem({
@@ -88,45 +90,45 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
       {/* Usage Type Selector */}
       <div className="space-y-2">
         <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
-          <span>Tipo de Licencia / Uso</span>
+          <span>{t('modal_license_type')}</span>
           <span className="text-[10px] sm:text-[11px] font-normal normal-case text-neutral-400">
-            Personal por defecto
+            {t('modal_personal_default')}
           </span>
         </label>
         <div className="grid grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={() => setUsageType('personal')}
-            className={`flex flex-col items-start p-3 rounded-xl border text-xs font-semibold transition-all ${
+            className={`flex flex-col items-start p-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
               usageType === 'personal'
                 ? 'border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-300 shadow-2xs'
                 : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
             }`}
           >
             <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
-              <span>Uso Personal</span>
+              <span>{t('modal_personal_use')}</span>
               {usageType === 'personal' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
             </div>
             <span className="text-[10px] sm:text-[11px] font-normal mt-0.5 text-neutral-500 dark:text-neutral-400">
-              Avatar, redes o regalo.
+              {t('modal_personal_desc')}
             </span>
           </button>
 
           <button
             type="button"
             onClick={() => setUsageType('commercial')}
-            className={`flex flex-col items-start p-3 rounded-xl border text-xs font-semibold transition-all ${
+            className={`flex flex-col items-start p-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
               usageType === 'commercial'
                 ? 'border-rose-500 bg-rose-500/10 text-rose-700 dark:text-rose-300 shadow-2xs'
                 : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:border-neutral-300'
             }`}
           >
             <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
-              <span>Uso Comercial</span>
+              <span>{t('modal_commercial_use')}</span>
               {usageType === 'commercial' && <Check className="h-3.5 w-3.5 text-emerald-500" />}
             </div>
             <span className="text-[10px] sm:text-[11px] font-normal mt-0.5 text-neutral-500 dark:text-neutral-400">
-              Streaming o merch (+50%).
+              {t('modal_commercial_desc')}
             </span>
           </button>
         </div>
@@ -135,14 +137,14 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
       {/* Briefing Textarea */}
       <div className="space-y-1.5">
         <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
-          <span>Descripción de la Idea / Personaje *</span>
-          <span className="text-[10px] font-normal normal-case text-rose-400">Obligatorio</span>
+          <span>{t('modal_brief_label')}</span>
+          <span className="text-[10px] font-normal normal-case text-rose-400">{t('modal_required')}</span>
         </label>
         <textarea
           rows={3}
           value={brief}
           onChange={(e) => setBrief(e.target.value)}
-          placeholder="Describe la pose, expresión, vestimenta, colores o concepto que deseas..."
+          placeholder={t('modal_brief_placeholder')}
           className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/80 p-3 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none transition-all resize-none"
           required
         />
@@ -152,13 +154,13 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
       <div className="space-y-1.5">
         <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
           <Link2 className="h-3.5 w-3.5" />
-          <span>Enlaces de Referencias Visuales</span>
+          <span>{t('modal_references_label')}</span>
         </label>
         <input
           type="text"
           value={references}
           onChange={(e) => setReferences(e.target.value)}
-          placeholder="https://pinterest.com/... o https://imgur.com/..."
+          placeholder={t('modal_references_placeholder')}
           className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/80 px-3 py-2 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none transition-all"
         />
       </div>
@@ -167,7 +169,7 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
       {commission.options && commission.options.length > 0 && (
         <div className="space-y-2">
           <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-            Opciones & Extras Adicionales
+            {t('modal_addons_label')}
           </label>
           <div className="space-y-1.5">
             {commission.options.map((option) => {
@@ -218,7 +220,7 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
       {/* Live Total & Add to Cart Button */}
       <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-4">
         <div>
-          <span className="text-[10px] text-neutral-400 uppercase font-semibold">Total Estimado</span>
+          <span className="text-[10px] text-neutral-400 uppercase font-semibold">{t('modal_estimated_total')}</span>
           <p className="text-xl font-bold text-rose-600 dark:text-rose-400">
             {formatCurrency(unitPrice, currency)}
           </p>
@@ -227,7 +229,7 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
         <button
           type="submit"
           disabled={commission.slotsAvailable <= 0}
-          className={`flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-xs font-bold text-white shadow-md transition-all active:scale-95 ${
+          className={`flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-xs font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer ${
             commission.slotsAvailable <= 0
               ? 'bg-neutral-400 cursor-not-allowed opacity-60'
               : isAdded
@@ -238,14 +240,14 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
           {isAdded ? (
             <>
               <Check className="h-4 w-4 animate-bounce" />
-              <span>¡Añadido al Carrito!</span>
+              <span>{t('modal_added_to_cart')}</span>
             </>
           ) : commission.slotsAvailable <= 0 ? (
-            <span>Sin Slots Disponibles</span>
+            <span>{t('modal_no_slots')}</span>
           ) : (
             <>
               <ShoppingBag className="h-4 w-4" />
-              <span>Añadir al Carrito</span>
+              <span>{t('modal_add_to_cart')}</span>
             </>
           )}
         </button>

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Commission } from '@/lib/types';
 import { useApp } from '@/context/app-context';
+import { useLanguage } from '@/context/language-context';
 import { formatCurrency } from '@/lib/utils';
 import { Clock, ArrowRight } from 'lucide-react';
 
@@ -13,6 +14,7 @@ interface CommissionGridCardProps {
 
 export const CommissionGridCard: React.FC<CommissionGridCardProps> = ({ commission, onOpenModal }) => {
   const { currency } = useApp();
+  const { language } = useLanguage();
 
   const mainSample = commission.samples[0] || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80';
   const priceDisplay = commission.priceMax
@@ -42,7 +44,7 @@ export const CommissionGridCard: React.FC<CommissionGridCardProps> = ({ commissi
         {/* Slots Badge */}
         <div className="absolute bottom-2 left-2 rounded-md bg-neutral-900/85 backdrop-blur-xs px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-white">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1" />
-          {commission.slotsAvailable} slots
+          {commission.slotsAvailable} {language === 'en' ? 'slots' : 'cupos'}
         </div>
       </div>
 
@@ -60,10 +62,10 @@ export const CommissionGridCard: React.FC<CommissionGridCardProps> = ({ commissi
         <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800/80 flex items-center justify-between text-[10px] sm:text-[11px] text-neutral-500 dark:text-neutral-400">
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            {commission.deliveryDays}d
+            {commission.deliveryDays}{language === 'en' ? 'd turnaround' : 'd entrega'}
           </span>
           <span className="flex items-center gap-0.5 font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-0.5 transition-transform">
-            Pedir
+            {language === 'en' ? 'Order' : 'Pedir'}
             <ArrowRight className="h-3 w-3" />
           </span>
         </div>

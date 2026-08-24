@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Commission } from '@/lib/types';
 import { CommissionForm } from './commission-form';
 import { useApp } from '@/context/app-context';
+import { useLanguage } from '@/context/language-context';
 import { formatCurrency } from '@/lib/utils';
 import { X, ChevronLeft, ChevronRight, Clock, Sparkles } from 'lucide-react';
 
@@ -21,6 +22,7 @@ export const CommissionModal: React.FC<CommissionModalProps> = ({
   onClose,
 }) => {
   const { currency } = useApp();
+  const { t } = useLanguage();
   const [activeImgIndex, setActiveImgIndex] = useState(initialImageIndex);
 
   if (!isOpen || !commission) return null;
@@ -134,11 +136,11 @@ export const CommissionModal: React.FC<CommissionModalProps> = ({
                 </span>
                 <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 dark:bg-emerald-500/10 px-2 py-0.8 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-500/20">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  {commission.slotsAvailable} slots
+                  {t('modal_slots_count', { count: commission.slotsAvailable })}
                 </span>
                 <span className="flex items-center gap-1 rounded-full bg-neutral-100 dark:bg-neutral-800 px-2 py-0.8 text-neutral-600 dark:text-neutral-300 font-medium">
                   <Clock className="h-3 w-3 text-neutral-400" />
-                  {commission.deliveryDays} días
+                  {t('modal_days_count', { days: commission.deliveryDays })}
                 </span>
               </div>
 
@@ -147,7 +149,7 @@ export const CommissionModal: React.FC<CommissionModalProps> = ({
                 <div className="mt-3.5 rounded-xl bg-rose-50/50 dark:bg-neutral-800/50 p-3 text-xs text-neutral-600 dark:text-neutral-400 space-y-1 border border-rose-100 dark:border-neutral-700/60">
                   <p className="font-bold text-rose-700 dark:text-rose-300 flex items-center gap-1 text-[10px] uppercase tracking-wider">
                     <Sparkles className="h-3 w-3 text-rose-500" />
-                    Condiciones del encargo
+                    {t('modal_conditions')}
                   </p>
                   <ul className="list-disc pl-4 space-y-0.5 text-[10px] sm:text-[11px]">
                     {commission.additionalInfo.map((info, i) => (

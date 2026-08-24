@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
 import { useApp } from '@/context/app-context';
+import { useLanguage } from '@/context/language-context';
 import { Order, OrderStatus } from '@/lib/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { uploadImageFile } from '@/lib/services/upload-service';
@@ -29,6 +30,7 @@ import {
 export default function CustomerAccountPage() {
   const { user, logout, updateProfile, setIsAuthModalOpen } = useAuth();
   const { orders, addOrderMessage, updateOrderStatus, artist, currency } = useApp();
+  const { t, language } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<'orders' | 'inbox' | 'files' | 'profile'>('orders');
   const [selectedChatOrderId, setSelectedChatOrderId] = useState<string | null>(null);
@@ -79,18 +81,18 @@ export default function CustomerAccountPage() {
         </div>
         <div className="space-y-1">
           <h2 className="text-2xl font-bold tracking-wider text-neutral-900 dark:text-white">
-            Portal de Clientes
+            {t('account_title')}
           </h2>
           <p className="text-xs text-neutral-500">
-            Inicia sesión para consultar tus pedidos, chatear con Peti y descargar tus ilustraciones en alta calidad.
+            {t('account_subtitle')}
           </p>
         </div>
 
         <button
           onClick={() => setIsAuthModalOpen(true)}
-          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 py-3.5 px-6 text-xs font-bold text-white shadow-lg shadow-rose-600/25 transition-all active:scale-95"
+          className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 py-3.5 px-6 text-xs font-bold text-white shadow-lg shadow-rose-600/25 transition-all active:scale-95 cursor-pointer"
         >
-          <span>Iniciar Sesión / Registrarme</span>
+          <span>{language === 'en' ? 'Sign In / Register' : 'Iniciar Sesión / Registrarme'}</span>
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>
@@ -126,7 +128,7 @@ export default function CustomerAccountPage() {
         orderId: selectedOrder.id,
         sender: 'customer',
         senderName: user.name,
-        text: `Adjunté una imagen de referencia: ${uploaded.name}`,
+        text: language === 'en' ? `Attached reference image: ${uploaded.name}` : `Adjunté una imagen de referencia: ${uploaded.name}`,
         attachmentUrl: uploaded.url,
         attachmentName: uploaded.name,
         type: 'message',
@@ -144,7 +146,7 @@ export default function CustomerAccountPage() {
       orderId,
       sender: 'customer',
       senderName: user.name,
-      text: '✨ ¡Boceto Aprobado! Autorizo continuar con el lineart y color final.',
+      text: language === 'en' ? '✨ Sketch Approved! Proceeding to final lineart and coloring.' : '✨ ¡Boceto Aprobado! Autorizo continuar con el lineart y color final.',
       type: 'sketch_approval',
       isRead: false,
     });
@@ -183,12 +185,12 @@ export default function CustomerAccountPage() {
           />
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500">
-              Panel de Cliente
+              {language === 'en' ? 'Customer Dashboard' : 'Panel de Cliente'}
             </span>
             <h1 className="text-lg sm:text-xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
               <span>{user.name}</span>
               <span className="rounded-full bg-emerald-500/10 px-2 py-0.2 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                Cliente Activo
+                {language === 'en' ? 'Active Customer' : 'Cliente Activo'}
               </span>
             </h1>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">{user.email}</p>
@@ -201,12 +203,12 @@ export default function CustomerAccountPage() {
             href="/"
             className="rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 px-3.5 py-2 text-xs font-bold hover:bg-rose-500/15 transition-colors"
           >
-            + Encargar Nueva Comisión
+            {language === 'en' ? '+ Order New Commission' : '+ Encargar Nueva Comisión'}
           </Link>
           <button
             onClick={logout}
-            className="flex items-center gap-1 rounded-xl border border-neutral-200 dark:border-neutral-800 p-2 text-xs text-neutral-500 hover:text-rose-600 transition-colors"
-            title="Cerrar sesión"
+            className="flex items-center gap-1 rounded-xl border border-neutral-200 dark:border-neutral-800 p-2 text-xs text-neutral-500 hover:text-rose-600 transition-colors cursor-pointer"
+            title={t('nav_logout')}
           >
             <LogOut className="h-4 w-4" />
           </button>
@@ -217,50 +219,50 @@ export default function CustomerAccountPage() {
       <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 border-b border-neutral-200 dark:border-neutral-800 scrollbar-none">
         <button
           onClick={() => setActiveTab('orders')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === 'orders'
               ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
               : 'text-neutral-600 dark:text-neutral-400 hover:bg-rose-50 dark:hover:bg-neutral-900'
           }`}
         >
           <Package className="h-4 w-4" />
-          <span>Mis Pedidos ({userOrders.length})</span>
+          <span>{t('account_my_orders')} ({userOrders.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('inbox')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === 'inbox'
               ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
               : 'text-neutral-600 dark:text-neutral-400 hover:bg-rose-50 dark:hover:bg-neutral-900'
           }`}
         >
           <MessageSquare className="h-4 w-4" />
-          <span>Centro de Chats</span>
+          <span>{t('account_chats')}</span>
         </button>
 
         <button
           onClick={() => setActiveTab('files')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === 'files'
               ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
               : 'text-neutral-600 dark:text-neutral-400 hover:bg-rose-50 dark:hover:bg-neutral-900'
           }`}
         >
           <Sparkles className="h-4 w-4" />
-          <span>Mis Archivos ({allDeliveredFiles.length})</span>
+          <span>{t('account_my_files')} ({allDeliveredFiles.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('profile')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
             activeTab === 'profile'
               ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
               : 'text-neutral-600 dark:text-neutral-400 hover:bg-rose-50 dark:hover:bg-neutral-900'
           }`}
         >
           <User className="h-4 w-4" />
-          <span>Mi Perfil</span>
+          <span>{t('account_profile')}</span>
         </button>
       </div>
 
@@ -271,16 +273,18 @@ export default function CustomerAccountPage() {
             <div className="rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800 p-10 text-center space-y-3">
               <Package className="h-8 w-8 text-neutral-400 mx-auto" />
               <h3 className="text-sm font-bold text-neutral-800 dark:text-neutral-200">
-                Aún no tienes ningún encargo registrado
+                {t('account_no_orders')}
               </h3>
               <p className="text-xs text-neutral-500 max-w-sm mx-auto">
-                Explora el catálogo de Peti y encarga tu primera ilustración personalizada.
+                {language === 'en'
+                  ? "Explore Peti's catalog and order your first custom illustration."
+                  : 'Explora el catálogo de Peti y encarga tu primera ilustración personalizada.'}
               </p>
               <Link
                 href="/"
                 className="inline-block rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-2 text-xs font-bold text-white shadow-md"
               >
-                Ver Catálogo de Comisiones
+                {t('cart_view_catalog')}
               </Link>
             </div>
           ) : (
@@ -306,12 +310,12 @@ export default function CustomerAccountPage() {
                           : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
                       }`}>
                         {ord.status === 'completed'
-                          ? 'Completado'
+                          ? (language === 'en' ? 'Completed' : 'Completado')
                           : ord.status === 'in_review'
-                          ? 'En Revisión de Boceto'
+                          ? (language === 'en' ? 'In Review' : 'En Revisión de Boceto')
                           : ord.status === 'in_progress'
-                          ? 'En Proceso'
-                          : 'En Cola / Pendiente'}
+                          ? (language === 'en' ? 'In Progress' : 'En Proceso')
+                          : (language === 'en' ? 'Queued / Pending' : 'En Cola / Pendiente')}
                       </span>
                     </div>
 
@@ -352,7 +356,7 @@ export default function CustomerAccountPage() {
                         className="flex items-center gap-1 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-all active:scale-95"
                       >
                         <MessageSquare className="h-3.5 w-3.5" />
-                        <span>Abrir Chat & Avance</span>
+                        <span>{language === 'en' ? 'Open Chat & Progress' : 'Abrir Chat & Avance'}</span>
                       </Link>
                     </div>
                   </div>
@@ -369,7 +373,7 @@ export default function CustomerAccountPage() {
           {/* Left: Orders List / Conversations (4 Cols) */}
           <div className="lg:col-span-4 border-r border-neutral-200 dark:border-neutral-800 overflow-y-auto p-3 space-y-2 bg-neutral-50/50 dark:bg-neutral-950/30">
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 block mb-1">
-              Tus Conversaciones
+              {language === 'en' ? 'Your Conversations' : 'Tus Conversaciones'}
             </span>
             {userOrders.map((ord) => {
               const isSelected = selectedOrder?.id === ord.id;
@@ -389,7 +393,7 @@ export default function CustomerAccountPage() {
                     <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
                       isSelected ? 'bg-white/20 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
                     }`}>
-                      {ord.status === 'completed' ? 'Completado' : 'Activo'}
+                      {ord.status === 'completed' ? (language === 'en' ? 'Completed' : 'Completado') : (language === 'en' ? 'Active' : 'Activo')}
                     </span>
                   </div>
                   <p className={`text-[11px] truncate ${isSelected ? 'text-white/90' : 'text-neutral-500'}`}>
@@ -414,7 +418,7 @@ export default function CustomerAccountPage() {
                   />
                   <div>
                     <h4 className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1">
-                      <span>Peti • Artista</span>
+                      <span>{artist.name} • {language === 'en' ? 'Artist' : 'Artista'}</span>
                       <CheckCircle2 className="h-3 w-3 text-rose-500" />
                     </h4>
                     <p className="text-[10px] text-neutral-400">{selectedOrder.orderNumber} - {selectedOrder.items[0]?.title}</p>
@@ -424,10 +428,10 @@ export default function CustomerAccountPage() {
                 {selectedOrder.status === 'in_progress' && (
                   <button
                     onClick={() => handleApproveSketch(selectedOrder.id)}
-                    className="flex items-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition-all active:scale-95"
+                    className="flex items-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition-all active:scale-95 cursor-pointer"
                   >
                     <ThumbsUp className="h-3.5 w-3.5" />
-                    <span>Aprobar Boceto</span>
+                    <span>{language === 'en' ? 'Approve Sketch' : 'Aprobar Boceto'}</span>
                   </button>
                 )}
               </div>
@@ -443,7 +447,7 @@ export default function CustomerAccountPage() {
                         className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                       >
                         <span className="text-[10px] text-neutral-400 font-semibold mb-0.5 px-1">
-                          {isMe ? 'Tú' : 'Peti'}
+                          {isMe ? (language === 'en' ? 'You' : 'Tú') : 'Peti'}
                         </span>
                         <div
                           className={`max-w-[80%] rounded-2xl p-3.5 text-xs space-y-2 shadow-xs ${
@@ -470,7 +474,7 @@ export default function CustomerAccountPage() {
                   })
                 ) : (
                   <div className="h-full flex items-center justify-center text-xs text-neutral-400">
-                    No hay mensajes en este pedido.
+                    {language === 'en' ? 'No messages in this order yet.' : 'No hay mensajes en este pedido.'}
                   </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -492,7 +496,8 @@ export default function CustomerAccountPage() {
                   type="button"
                   disabled={isUploading}
                   onClick={() => chatFileInputRef.current?.click()}
-                  className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-rose-500 transition-colors"
+                  className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-rose-500 transition-colors cursor-pointer"
+                  title={language === 'en' ? 'Attach file' : 'Adjuntar archivo'}
                 >
                   {isUploading ? <RefreshCw className="h-4 w-4 animate-spin text-rose-500" /> : <Paperclip className="h-4 w-4" />}
                 </button>
@@ -501,14 +506,14 @@ export default function CustomerAccountPage() {
                   type="text"
                   value={chatInputText}
                   onChange={(e) => setChatInputText(e.target.value)}
-                  placeholder="Escribe una respuesta para Peti..."
+                  placeholder={language === 'en' ? 'Write a response for Peti...' : 'Escribe una respuesta para Peti...'}
                   className="flex-1 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 px-3 py-2 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none"
                 />
 
                 <button
                   type="submit"
                   disabled={!chatInputText.trim()}
-                  className="rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 p-2.5 text-white shadow-xs disabled:opacity-40"
+                  className="rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 p-2.5 text-white shadow-xs disabled:opacity-40 cursor-pointer"
                 >
                   <Send className="h-4 w-4" />
                 </button>
@@ -516,7 +521,7 @@ export default function CustomerAccountPage() {
             </div>
           ) : (
             <div className="lg:col-span-8 flex items-center justify-center text-xs text-neutral-400">
-              Selecciona un pedido a la izquierda para ver el chat.
+              {language === 'en' ? 'Select an order on the left to view the chat.' : 'Selecciona un pedido a la izquierda para ver el chat.'}
             </div>
           )}
         </div>
@@ -529,10 +534,12 @@ export default function CustomerAccountPage() {
             <div className="rounded-3xl border border-dashed border-neutral-300 dark:border-neutral-800 p-10 text-center space-y-3">
               <Sparkles className="h-8 w-8 text-neutral-400 mx-auto" />
               <h3 className="text-sm font-bold text-neutral-800 dark:text-neutral-200">
-                Aún no tienes ilustraciones completadas
+                {language === 'en' ? 'No completed illustrations yet' : 'Aún no tienes ilustraciones completadas'}
               </h3>
               <p className="text-xs text-neutral-500 max-w-sm mx-auto">
-                Cuando Peti finalice tus dibujos, aparecerán aquí todos los archivos descargables en alta definición (PNG 300 DPI y PSD).
+                {language === 'en'
+                  ? 'When Peti finishes your art, all high-definition downloadable files (PNG 300 DPI and PSD) will appear here.'
+                  : 'Cuando Peti finalice tus dibujos, aparecerán aquí todos los archivos descargables en alta definición (PNG 300 DPI y PSD).'}
               </p>
             </div>
           ) : (
@@ -565,7 +572,7 @@ export default function CustomerAccountPage() {
                     className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2.5 text-xs font-bold text-white shadow-xs transition-all"
                   >
                     <Download className="h-3.5 w-3.5" />
-                    <span>Descargar Archivo</span>
+                    <span>{language === 'en' ? 'Download File' : 'Descargar Archivo'}</span>
                   </a>
                 </div>
               ))}
@@ -579,17 +586,17 @@ export default function CustomerAccountPage() {
         <div className="max-w-xl mx-auto rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 sm:p-8 shadow-xs space-y-5">
           <div className="space-y-1">
             <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-              Configuración de Perfil
+              {language === 'en' ? 'Profile Settings' : 'Configuración de Perfil'}
             </h3>
             <p className="text-xs text-neutral-500">
-              Modifica tu nombre y datos de contacto para tus pedidos de comisiones.
+              {language === 'en' ? 'Update your display name and contact info for commissions.' : 'Modifica tu nombre y datos de contacto para tus pedidos de comisiones.'}
             </p>
           </div>
 
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                Correo Electrónico (No editable)
+                {language === 'en' ? 'Email (Non-editable)' : 'Correo Electrónico (No editable)'}
               </label>
               <input
                 type="text"
@@ -601,7 +608,7 @@ export default function CustomerAccountPage() {
 
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                Nombre / Nickname *
+                {t('checkout_name_label')}
               </label>
               <input
                 type="text"
@@ -614,7 +621,7 @@ export default function CustomerAccountPage() {
 
             <div>
               <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-                Usuario de Discord (Opcional)
+                {t('checkout_discord_label')}
               </label>
               <input
                 type="text"
@@ -628,15 +635,15 @@ export default function CustomerAccountPage() {
             {profileSaved && (
               <div className="flex items-center gap-2 text-xs text-emerald-600 font-semibold bg-emerald-500/10 p-2.5 rounded-xl">
                 <CheckCircle2 className="h-4 w-4" />
-                <span>Perfil actualizado correctamente.</span>
+                <span>{language === 'en' ? 'Profile updated successfully.' : 'Perfil actualizado correctamente.'}</span>
               </div>
             )}
 
             <button
               type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 py-3 text-xs font-bold text-white shadow-md shadow-rose-600/20 active:scale-98 transition-all"
+              className="w-full rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 py-3 text-xs font-bold text-white shadow-md shadow-rose-600/20 active:scale-98 transition-all cursor-pointer"
             >
-              Guardar Cambios
+              {language === 'en' ? 'Save Changes' : 'Guardar Cambios'}
             </button>
           </form>
         </div>
