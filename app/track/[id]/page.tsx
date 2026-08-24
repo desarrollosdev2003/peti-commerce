@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import { Order, OrderMessage, OrderStatus } from '@/lib/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { uploadImageFile } from '@/lib/services/upload-service';
@@ -42,8 +43,16 @@ export default function OrderTrackingPage() {
   const rawId = (params?.id as string) || '';
   
   const { orders, getOrder, addOrderMessage, updateOrderStatus, artist, currency } = useApp();
+  const { user, isAdmin } = useAuth();
   const { clearCart } = useCart();
   const [order, setOrder] = useState<Order | null>(null);
+
+  // Determine if the current viewer is the Admin (Peti) or Customer
+  const isViewerAdmin = Boolean(
+    isAdmin ||
+    user?.role === 'admin' ||
+    (user?.email && user.email.toLowerCase() === (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').toLowerCase())
+  );
 
   // Clear cart when confirmed order tracking room is loaded
   useEffect(() => {
@@ -172,10 +181,13 @@ export default function OrderTrackingPage() {
     const text = inputText.trim();
     setInputText('');
 
+    const senderRole = isViewerAdmin ? 'artist' : 'customer';
+    const senderName = isViewerAdmin ? 'Peti' : (order.customerName || user?.name || 'Cliente');
+
     const newMsg = addOrderMessage(order.id, {
       orderId: order.id,
-      sender: 'customer',
-      senderName: order.customerName,
+      sender: senderRole,
+      senderName,
       text,
       type: 'message',
       isRead: false,
@@ -192,14 +204,17 @@ export default function OrderTrackingPage() {
     setIsUploading(true);
     try {
       const uploaded = await uploadImageFile(file);
+      const senderRole = isViewerAdmin ? 'artist' : 'customer';
+      const senderName = isViewerAdmin ? 'Peti' : (order.customerName || user?.name || 'Cliente');
+
       const newMsg = addOrderMessage(order.id, {
         orderId: order.id,
-        sender: 'customer',
-        senderName: order.customerName,
-        text: `Adjunté una imagen de referencia: ${uploaded.name}`,
+        sender: senderRole,
+        senderName,
+        text: isViewerAdmin ? '🎨 Boceto / archivo adjunto compartido:' : `Adjunté una imagen de referencia: ${uploaded.name}`,
         attachmentUrl: uploaded.url,
         attachmentName: uploaded.name,
-        type: 'message',
+        type: isViewerAdmin ? 'sketch_submission' : 'message',
         isRead: false,
       });
 
@@ -472,50 +487,96 @@ export default function OrderTrackingPage() {
           </div>
 
           {/* Messages Scroll Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-neutral-50/40 dark:bg-neutral-950/20">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-neutral-50/50 dark:bg-neutral-950/40">
             {order.messages && order.messages.length > 0 ? (
               order.messages.map((msg) => {
-                const isMe = msg.sender === 'customer';
+                const isMsgFromArtist = msg.sender === 'artist';
+                // Is this message from ME (the viewer)?
+                const isMe = isViewerAdmin ? isMsgFromArtist : !isMsgFromArtist;
+
                 return (
                   <div
                     key={msg.id}
-                    className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                    className={`flex items-end gap-2.5 ${
+                      isMe ? 'flex-row-reverse self-end ml-auto' : 'flex-row self-start mr-auto'
+                    } max-w-[88%] sm:max-w-[80%]`}
                   >
-                    <span className="text-[10px] text-neutral-400 font-semibold mb-1 px-1">
-                      {isMe ? 'Tú' : artist.name}
-                    </span>
-
-                    <div
-                      className={`max-w-[85%] rounded-2xl p-3.5 space-y-2 text-xs shadow-xs ${
-                        isMe
-                          ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-tr-xs'
-                          : 'bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 border border-neutral-200/80 dark:border-neutral-700/80 rounded-tl-xs'
-                      }`}
-                    >
-                      <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-
-                      {/* Attached sketch / image */}
-                      {msg.attachmentUrl && (
-                        <div
-                          onClick={() => setSelectedImagePreview(msg.attachmentUrl || null)}
-                          className="relative rounded-xl overflow-hidden cursor-pointer group mt-2 border border-black/10 dark:border-white/10"
-                        >
+                    {/* Avatar Icon */}
+                    <div className="shrink-0 mb-1">
+                      {isMsgFromArtist ? (
+                        <div className="relative">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={msg.attachmentUrl}
-                            alt="boceto adjunto"
-                            className="max-h-60 w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            src={artist.avatar}
+                            alt="Peti"
+                            className="h-8 w-8 rounded-full object-cover border-2 border-rose-400 shadow-xs"
                           />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[11px] font-bold transition-opacity">
-                            Hacer clic para ampliar
-                          </div>
+                          <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border border-white dark:border-neutral-900 flex items-center justify-center text-[7px] text-white">
+                            ✓
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center border-2 border-sky-300 shadow-xs">
+                          {(msg.senderName || order.customerName || 'C')[0].toUpperCase()}
                         </div>
                       )}
                     </div>
 
-                    <span className="text-[9px] text-neutral-400 mt-1 px-1">
-                      {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                    {/* Bubble and Header */}
+                    <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                      {/* Name Tag & Role Badge */}
+                      <div className="flex items-center gap-1.5 mb-1 px-1 text-[11px]">
+                        {isMsgFromArtist ? (
+                          <span className="font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                            <span>{isMe ? 'Tú (Peti ✨)' : 'Peti (Artista ✨)'}</span>
+                            <span className="text-[9px] bg-rose-500/10 text-rose-600 dark:text-rose-400 px-1.5 py-0.2 rounded-md font-bold uppercase">
+                              Artista
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="font-extrabold text-sky-600 dark:text-sky-400 flex items-center gap-1">
+                            <span>{isMe ? `Tú (${msg.senderName || order.customerName})` : (msg.senderName || order.customerName)}</span>
+                            <span className="text-[9px] bg-sky-500/10 text-sky-600 dark:text-sky-400 px-1.5 py-0.2 rounded-md font-bold uppercase">
+                              Cliente
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Bubble Text */}
+                      <div
+                        className={`rounded-2xl p-3.5 space-y-2 text-xs shadow-xs ${
+                          isMsgFromArtist
+                            ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-tr-xs shadow-rose-600/15'
+                            : 'bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-700 rounded-tl-xs shadow-neutral-900/5'
+                        }`}
+                      >
+                        <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+
+                        {/* Attached sketch / image */}
+                        {msg.attachmentUrl && (
+                          <div
+                            onClick={() => setSelectedImagePreview(msg.attachmentUrl || null)}
+                            className="relative rounded-xl overflow-hidden cursor-pointer group mt-2 border border-black/10 dark:border-white/10"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={msg.attachmentUrl}
+                              alt="boceto adjunto"
+                              className="max-h-60 w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[11px] font-bold transition-opacity">
+                              Hacer clic para ampliar
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Timestamp */}
+                      <span className="text-[9px] text-neutral-400 mt-1 px-1">
+                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
                   </div>
                 );
               })
@@ -554,7 +615,11 @@ export default function OrderTrackingPage() {
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Escribe tu mensaje o respuesta para Peti..."
+              placeholder={
+                isViewerAdmin
+                  ? "Escribe un mensaje o respuesta como Peti (Artista)..."
+                  : "Escribe tu mensaje o consulta para Peti..."
+              }
               className="flex-1 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 px-3.5 py-2.5 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none"
             />
 

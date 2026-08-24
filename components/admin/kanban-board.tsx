@@ -297,7 +297,7 @@ const DraggingCardPreview: React.FC<{ order: Order; currency: 'USD' | 'ARS' }> =
 
 /* Main Kanban Board */
 export const KanbanBoard = () => {
-  const { orders, updateOrderStatus, deleteOrder, addOrderMessage, addDeliveredFile, currency, refreshOrders } = useApp();
+  const { orders, updateOrderStatus, deleteOrder, addOrderMessage, addDeliveredFile, currency, refreshOrders, artist } = useApp();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [activeDraggingOrder, setActiveDraggingOrder] = useState<Order | null>(null);
   const [mobileActiveColumn, setMobileActiveColumn] = useState<OrderStatus>('pending');
@@ -675,34 +675,82 @@ export const KanbanBoard = () => {
             ) : (
               /* Tab 2: Live Chat with Customer */
               <div className="space-y-3">
-                <div className="h-64 overflow-y-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 p-3 space-y-3">
+                <div className="h-72 overflow-y-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 p-4 space-y-4">
                   {selectedOrder.messages && selectedOrder.messages.length > 0 ? (
                     selectedOrder.messages.map((msg) => {
                       const isArtist = msg.sender === 'artist';
                       return (
                         <div
                           key={msg.id}
-                          className={`flex flex-col ${isArtist ? 'items-end' : 'items-start'}`}
+                          className={`flex items-end gap-2.5 ${
+                            isArtist ? 'flex-row-reverse self-end ml-auto' : 'flex-row self-start mr-auto'
+                          } max-w-[88%] sm:max-w-[80%]`}
                         >
-                          <span className="text-[10px] text-neutral-400 font-semibold mb-0.5">
-                            {isArtist ? 'Tú (Peti)' : selectedOrder.customerName}
-                          </span>
-                          <div
-                            className={`max-w-[85%] rounded-2xl p-3 text-xs space-y-1.5 ${
-                              isArtist
-                                ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-tr-xs'
-                                : 'bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-700 rounded-tl-xs'
-                            }`}
-                          >
-                            <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
-                            {msg.attachmentUrl && (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={msg.attachmentUrl}
-                                alt="adjunto"
-                                className="max-h-40 rounded-lg object-cover border border-white/20"
-                              />
+                          {/* Avatar Icon */}
+                          <div className="shrink-0 mb-1">
+                            {isArtist ? (
+                              <div className="relative">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={artist?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'}
+                                  alt="Peti"
+                                  className="h-8 w-8 rounded-full object-cover border-2 border-rose-400 shadow-xs"
+                                />
+                                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border border-white dark:border-neutral-900 flex items-center justify-center text-[7px] text-white">
+                                  ✓
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center border-2 border-sky-300 shadow-xs">
+                                {(msg.senderName || selectedOrder.customerName || 'C')[0].toUpperCase()}
+                              </div>
                             )}
+                          </div>
+
+                          {/* Bubble & Header */}
+                          <div className={`flex flex-col ${isArtist ? 'items-end' : 'items-start'}`}>
+                            {/* Name Tag & Role Badge */}
+                            <div className="flex items-center gap-1.5 mb-1 px-1 text-[11px]">
+                              {isArtist ? (
+                                <span className="font-extrabold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                                  <span>Tú (Peti ✨)</span>
+                                  <span className="text-[9px] bg-rose-500/10 text-rose-600 dark:text-rose-400 px-1.5 py-0.2 rounded-md font-bold uppercase">
+                                    Artista
+                                  </span>
+                                </span>
+                              ) : (
+                                <span className="font-extrabold text-sky-600 dark:text-sky-400 flex items-center gap-1">
+                                  <span>{msg.senderName || selectedOrder.customerName}</span>
+                                  <span className="text-[9px] bg-sky-500/10 text-sky-600 dark:text-sky-400 px-1.5 py-0.2 rounded-md font-bold uppercase">
+                                    Cliente
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Speech Bubble */}
+                            <div
+                              className={`rounded-2xl p-3.5 space-y-2 text-xs shadow-xs ${
+                                isArtist
+                                  ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white rounded-tr-xs shadow-rose-600/15'
+                                  : 'bg-white dark:bg-neutral-800 text-neutral-800 dark:text-neutral-100 border border-neutral-200 dark:border-neutral-700 rounded-tl-xs shadow-neutral-900/5'
+                              }`}
+                            >
+                              <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                              {msg.attachmentUrl && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={msg.attachmentUrl}
+                                  alt="adjunto"
+                                  className="max-h-48 w-full rounded-xl object-cover border border-white/20 mt-1.5"
+                                />
+                              )}
+                            </div>
+
+                            {/* Timestamp */}
+                            <span className="text-[9px] text-neutral-400 mt-1 px-1">
+                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
                         </div>
                       );
