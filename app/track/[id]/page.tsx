@@ -37,6 +37,13 @@ const PROGRESS_STEPS: { id: OrderStatus; label: string; desc: string }[] = [
   { id: 'completed', label: '4. Finalizado', desc: 'Entrega de archivos en alta resolución' },
 ];
 
+const formatMessageTime = (dateStr?: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
 export default function OrderTrackingPage() {
   const params = useParams();
   const router = useRouter();
@@ -129,7 +136,21 @@ export default function OrderTrackingPage() {
           filter: `order_id=eq.${order.id}`,
         },
         (payload) => {
-          const newMsg = payload.new as OrderMessage;
+          const raw = payload.new as any;
+          if (!raw) return;
+          const newMsg: OrderMessage = {
+            id: raw.id,
+            orderId: raw.order_id || raw.orderId,
+            sender: raw.sender,
+            senderName: raw.sender_name || raw.senderName || 'Usuario',
+            text: raw.text || '',
+            attachmentUrl: raw.attachment_url || raw.attachmentUrl,
+            attachmentName: raw.attachment_name || raw.attachmentName,
+            type: raw.type || 'message',
+            createdAt: raw.created_at || raw.createdAt || new Date().toISOString(),
+            isRead: raw.is_read ?? raw.isRead ?? true,
+          };
+
           setOrder((prev) => {
             if (!prev) return null;
             if (prev.messages?.some((m) => m.id === newMsg.id)) return prev;
@@ -574,7 +595,7 @@ export default function OrderTrackingPage() {
 
                       {/* Timestamp */}
                       <span className="text-[9px] text-neutral-400 mt-1 px-1">
-                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {formatMessageTime(msg.createdAt)}
                       </span>
                     </div>
                   </div>

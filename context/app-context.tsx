@@ -216,7 +216,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Global Realtime Supabase Subscription for orders table updates
+  // Global Realtime Supabase Subscription for orders & messages table updates
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
@@ -247,7 +247,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               total: Number(newOrd.total),
               paymentMethod: newOrd.payment_method,
               status: newOrd.status,
-              createdAt: newOrd.created_at,
+              createdAt: newOrd.created_at || new Date().toISOString(),
               estimatedDelivery: newOrd.estimated_delivery,
               notes: newOrd.notes,
               items: newOrd.items || [],
@@ -259,6 +259,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               return [mappedOrder, ...prev];
             });
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'order_messages' },
+        (payload) => {
+          const raw = payload.new as any;
+          if (!raw) return;
+          const mappedMsg: OrderMessage = {
+            id: raw.id,
+            orderId: raw.order_id || raw.orderId,
+            sender: raw.sender,
+            senderName: raw.sender_name || raw.senderName || 'Usuario',
+            text: raw.text || '',
+            attachmentUrl: raw.attachment_url || raw.attachmentUrl,
+            attachmentName: raw.attachment_name || raw.attachmentName,
+            type: raw.type || 'message',
+            createdAt: raw.created_at || raw.createdAt || new Date().toISOString(),
+            isRead: raw.is_read ?? raw.isRead ?? true,
+          };
+
+          setOrders((prev) =>
+            prev.map((o) => {
+              if (o.id === mappedMsg.orderId || o.orderNumber === mappedMsg.orderId) {
+                if (o.messages?.some((m) => m.id === mappedMsg.id)) return o;
+                return {
+                  ...o,
+                  messages: [...(o.messages || []), mappedMsg],
+                  updatedAt: mappedMsg.createdAt,
+                };
+              }
+              return o;
+            })
+          );
         }
       )
       .subscribe();

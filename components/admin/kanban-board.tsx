@@ -52,6 +52,13 @@ const COLUMNS: { id: OrderStatus; label: string; color: string; badgeColor: stri
   { id: 'completed', label: 'Completados', color: 'border-emerald-500/30 bg-emerald-500/5', badgeColor: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400', headerBorder: 'border-emerald-500/40' },
 ];
 
+const formatMessageTime = (dateStr?: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
 /* Droppable Column Component */
 interface KanbanColumnProps {
   column: (typeof COLUMNS)[0];
@@ -749,7 +756,7 @@ export const KanbanBoard = () => {
 
                             {/* Timestamp */}
                             <span className="text-[9px] text-neutral-400 mt-1 px-1">
-                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {formatMessageTime(msg.createdAt)}
                             </span>
                           </div>
                         </div>
