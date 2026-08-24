@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { ArtistProfile, Commission, Order, OrderStatus, OrderMessage, DeliveredFile, CustomerUser } from '@/lib/types';
-import { INITIAL_ARTIST, INITIAL_COMMISSIONS, INITIAL_ORDERS, INITIAL_CUSTOMERS } from '@/lib/initial-data';
+import { INITIAL_ARTIST, INITIAL_COMMISSIONS } from '@/lib/initial-data';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 interface AppContextType {
@@ -30,94 +30,20 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY_COMMISSIONS = 'peti_commissions_v3';
-const STORAGE_KEY_ORDERS = 'peti_orders_v3';
-const STORAGE_KEY_ARTIST = 'peti_artist_v3';
-const STORAGE_KEY_CUSTOMERS = 'peti_customers_v1';
-
-// Seed demo messages for orders
-const SEED_ORDERS_WITH_MESSAGES: Order[] = INITIAL_ORDERS.map((ord) => {
-  const defaultMessages: OrderMessage[] = [
-    {
-      id: `msg-${ord.id}-1`,
-      orderId: ord.id,
-      sender: 'artist',
-      senderName: 'Peti',
-      text: `¡Hola ${ord.customerName}! Gracias por tu encargo. Ya he recibido tu briefing y referencias. Me pongo a trabajar en la composición inicial. Te compartiré por aquí los primeros bocetos para validar la pose y detalles. ✨`,
-      type: 'system',
-      createdAt: ord.createdAt,
-      isRead: true,
-    },
-  ];
-
-  if (ord.status === 'in_progress' || ord.status === 'in_review' || ord.status === 'completed') {
-    defaultMessages.push({
-      id: `msg-${ord.id}-2`,
-      orderId: ord.id,
-      sender: 'artist',
-      senderName: 'Peti',
-      text: '¡Aquí tienes el primer boceto preliminar para validar la composición y la pose!',
-      attachmentUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
-      attachmentName: 'sketch_v1.png',
-      type: 'sketch_submission',
-      createdAt: new Date(new Date(ord.createdAt).getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      isRead: true,
-    });
-    defaultMessages.push({
-      id: `msg-${ord.id}-3`,
-      orderId: ord.id,
-      sender: 'customer',
-      senderName: ord.customerName,
-      text: '¡Me encanta la pose y el estilo! ¿Podríamos hacer los ojos un poco más expresivos y agregar un pequeño brillo en el cabello?',
-      type: 'revision_request',
-      createdAt: new Date(new Date(ord.createdAt).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-      isRead: true,
-    });
-  }
-
-  if (ord.status === 'completed') {
-    defaultMessages.push({
-      id: `msg-${ord.id}-4`,
-      orderId: ord.id,
-      sender: 'artist',
-      senderName: 'Peti',
-      text: '¡Ilustración final completada y renderizada en alta resolución (300 DPI)! Muchas gracias por tu apoyo. Ya puedes descargar los archivos finales. 💖',
-      attachmentUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1200&q=80',
-      attachmentName: 'final_artwork_300dpi.png',
-      type: 'final_delivery',
-      createdAt: new Date(new Date(ord.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      isRead: true,
-    });
-  }
-
-  return {
-    ...ord,
-    messages: defaultMessages,
-    deliveredFiles: ord.status === 'completed' ? [
-      {
-        name: 'final_render_300dpi.png',
-        url: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=1200&q=80',
-        size: '18.4 MB',
-        uploadedAt: ord.createdAt,
-      },
-      {
-        name: 'source_layers.psd',
-        url: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1200&q=80',
-        size: '142.8 MB',
-        uploadedAt: ord.createdAt,
-      }
-    ] : [],
-  };
-});
+const STORAGE_KEY_COMMISSIONS = 'peti_commissions_v4';
+const STORAGE_KEY_ORDERS = 'peti_orders_v4';
+const STORAGE_KEY_ARTIST = 'peti_artist_v4';
+const STORAGE_KEY_CUSTOMERS = 'peti_customers_v4';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [artist, setArtist] = useState<ArtistProfile>(INITIAL_ARTIST);
   const [commissions, setCommissions] = useState<Commission[]>(INITIAL_COMMISSIONS);
-  const [orders, setOrders] = useState<Order[]>(SEED_ORDERS_WITH_MESSAGES);
-  const [customers, setCustomers] = useState<CustomerUser[]>(INITIAL_CUSTOMERS);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [customers, setCustomers] = useState<CustomerUser[]>([]);
   const [currency, setCurrency] = useState<'USD' | 'ARS'>('USD');
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Load persisted data
   useEffect(() => {
     try {
       const storedArtist = localStorage.getItem(STORAGE_KEY_ARTIST);
@@ -136,6 +62,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } finally {
       setIsLoaded(true);
     }
+  }, []);
+
+  // Fetch real production orders from Supabase on mount
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+
+    supabase
+      .from('orders')
+      .select('*, order_messages(*)')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          const mappedOrders: Order[] = data.map((d: any) => ({
+            id: d.id,
+            orderNumber: d.order_number,
+            customerId: d.customer_id,
+            customerName: d.customer_name,
+            customerEmail: d.customer_email,
+            total: Number(d.total),
+            paymentMethod: d.payment_method,
+            status: d.status,
+            createdAt: d.created_at,
+            estimatedDelivery: d.estimated_delivery,
+            notes: d.notes,
+            items: d.items || [],
+            deliveredFiles: d.delivered_files || [],
+            messages: (d.order_messages || []).map((m: any) => ({
+              id: m.id,
+              orderId: m.order_id,
+              sender: m.sender,
+              senderName: m.sender_name,
+              text: m.text,
+              attachmentUrl: m.attachment_url,
+              attachmentName: m.attachment_name,
+              type: m.type,
+              createdAt: m.created_at,
+              isRead: true,
+            })),
+          }));
+          setOrders(mappedOrders);
+        }
+      });
   }, []);
 
   // Multi-tab cross communication sync
@@ -181,6 +150,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   : o
               )
             );
+          } else if (payload.eventType === 'INSERT' && payload.new) {
+            const newOrd = payload.new as any;
+            const mappedOrder: Order = {
+              id: newOrd.id,
+              orderNumber: newOrd.order_number,
+              customerId: newOrd.customer_id,
+              customerName: newOrd.customer_name,
+              customerEmail: newOrd.customer_email,
+              total: Number(newOrd.total),
+              paymentMethod: newOrd.payment_method,
+              status: newOrd.status,
+              createdAt: newOrd.created_at,
+              estimatedDelivery: newOrd.estimated_delivery,
+              notes: newOrd.notes,
+              items: newOrd.items || [],
+              deliveredFiles: newOrd.delivered_files || [],
+              messages: [],
+            };
+            setOrders((prev) => {
+              if (prev.some((o) => o.id === mappedOrder.id)) return prev;
+              return [mappedOrder, ...prev];
+            });
           }
         }
       )

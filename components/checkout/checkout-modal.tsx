@@ -120,17 +120,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, o
       setIsProcessing(false);
       setCompletedOrder(newOrder);
 
-      // If real payment URL is returned (and not mock), redirect to gateway
-      if (data.redirectUrl && !data.mocked) {
+      // Redirect directly to real payment gateway (Mercado Pago / Polar)
+      if (data.redirectUrl) {
         window.location.href = data.redirectUrl;
       }
     } catch (err) {
       console.error('Error procesando pago:', err);
-      // Fallback: save order locally anyway
-      addOrder(newOrder);
-      clearCart();
+      setError('Hubo un error comunicando con la pasarela de pago. Por favor intenta de nuevo.');
       setIsProcessing(false);
-      setCompletedOrder(newOrder);
     }
   };
 

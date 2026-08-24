@@ -17,8 +17,8 @@ const resend = isResendConfigured ? new Resend(resendApiKey) : null;
  */
 export async function sendOrderConfirmationEmail(order: Order) {
   if (!resend) {
-    console.log('[Resend Mock] Email de confirmación para:', order.customerEmail);
-    return { success: true, mocked: true };
+    console.warn('Resend API key no configurada');
+    return { success: false, error: 'Resend API key no configurada' };
   }
 
   const trackingLink = `${appUrl}/track/${order.orderNumber.replace('#', '')}`;
@@ -64,8 +64,8 @@ export async function sendOrderConfirmationEmail(order: Order) {
  */
 export async function sendNewMessageNotification(order: Order, message: OrderMessage) {
   if (!resend) {
-    console.log('[Resend Mock] Notificación de mensaje para:', order.customerEmail);
-    return { success: true, mocked: true };
+    console.warn('Resend API key no configurada');
+    return { success: false, error: 'Resend API key no configurada' };
   }
 
   const trackingLink = `${appUrl}/track/${order.orderNumber.replace('#', '')}`;

@@ -64,7 +64,7 @@ export default function TrackSearchPage() {
           Seguimiento de Encargos & Chat
         </h1>
         <p className="max-w-md mx-auto text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
-          Ingresa tu número de pedido (ej: <strong className="text-rose-500">#PETI-8901</strong>) para ver el avance de tu dibujo y chatear con Peti.
+          Ingresa tu número de pedido (ej: <strong className="text-rose-500 font-mono">#PETI-8901</strong>) o tu correo para ver el avance y chatear con Peti.
         </p>
 
         {/* Search Bar Form */}
@@ -97,46 +97,48 @@ export default function TrackSearchPage() {
         </form>
       </div>
 
-      {/* Demo Recent Orders List for Quick Access */}
-      <div className="space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 block text-center sm:text-left">
-          Encargos Recientes (Acceso Rápido de Prueba)
-        </span>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {orders.slice(0, 4).map((ord) => (
-            <Link
-              key={ord.id}
-              href={`/track/${ord.orderNumber.replace('#', '')}`}
-              className="flex items-center justify-between p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-rose-500 hover:shadow-md transition-all group"
-            >
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-neutral-900 dark:text-white">
-                    {ord.orderNumber}
-                  </span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    ord.status === 'completed'
-                      ? 'bg-emerald-500/15 text-emerald-600'
-                      : ord.status === 'in_review'
-                      ? 'bg-purple-500/15 text-purple-600'
-                      : ord.status === 'in_progress'
-                      ? 'bg-blue-500/15 text-blue-600'
-                      : 'bg-rose-500/15 text-rose-600'
-                  }`}>
-                    {ord.status === 'completed' ? 'Completado' : ord.status === 'in_review' ? 'En Revisión' : ord.status === 'in_progress' ? 'En Proceso' : 'Pendiente'}
-                  </span>
+      {/* Orders List when user has orders */}
+      {orders.length > 0 && (
+        <div className="space-y-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 block text-center sm:text-left">
+            Tus Encargos Recientes
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {orders.slice(0, 4).map((ord) => (
+              <Link
+                key={ord.id}
+                href={`/track/${ord.orderNumber.replace('#', '')}`}
+                className="flex items-center justify-between p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-rose-500 hover:shadow-md transition-all group"
+              >
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-neutral-900 dark:text-white">
+                      {ord.orderNumber}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      ord.status === 'completed'
+                        ? 'bg-emerald-500/15 text-emerald-600'
+                        : ord.status === 'in_review'
+                        ? 'bg-purple-500/15 text-purple-600'
+                        : ord.status === 'in_progress'
+                        ? 'bg-blue-500/15 text-blue-600'
+                        : 'bg-rose-500/15 text-rose-600'
+                    }`}>
+                      {ord.status === 'completed' ? 'Completado' : ord.status === 'in_review' ? 'En Revisión' : ord.status === 'in_progress' ? 'En Proceso' : 'Pendiente'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-500">{ord.customerName} • {ord.items[0]?.title}</p>
                 </div>
-                <p className="text-xs text-neutral-500">{ord.customerName} • {ord.items[0]?.title}</p>
-              </div>
 
-              <div className="flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform">
-                <MessageSquare className="h-4 w-4" />
-                <ArrowRight className="h-3.5 w-3.5" />
-              </div>
-            </Link>
-          ))}
+                <div className="flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform">
+                  <MessageSquare className="h-4 w-4" />
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
