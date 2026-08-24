@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/auth-context';
 import {
   X,
@@ -8,21 +9,20 @@ import {
   User,
   ArrowRight,
   ShieldCheck,
+  Lock,
 } from 'lucide-react';
 
 export const AuthModal = () => {
-  const { isAuthModalOpen, setIsAuthModalOpen, login, loginWithOAuth } = useAuth();
+  const { isAuthModalOpen, setIsAuthModalOpen, loginCustomerWithEmail, loginWithOAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [discord, setDiscord] = useState('');
-  const [mode, setMode] = useState<'login' | 'register'>('login');
 
   if (!isAuthModalOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    login(email, name, discord);
+    loginCustomerWithEmail(email, name);
   };
 
   return (
@@ -34,7 +34,7 @@ export const AuthModal = () => {
         {/* Close Button */}
         <button
           onClick={() => setIsAuthModalOpen(false)}
-          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
         >
           <X className="h-4 w-4" />
         </button>
@@ -42,25 +42,25 @@ export const AuthModal = () => {
         {/* Modal Header */}
         <div className="text-center space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-rose-500">
-            Autenticación Segura
+            Portal de Clientes
           </span>
           <h3 className="text-lg sm:text-xl font-bold tracking-wider text-neutral-900 dark:text-white">
-            {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+            Acceso de Compradores
           </h3>
           <p className="text-xs text-neutral-500 max-w-xs mx-auto">
-            Accede a tus encargos, bandeja de chat con Peti y panel de descargas.
+            Inicia sesión para ver el historial de tus comisiones, descargas y hablar con Peti.
           </p>
         </div>
 
-        {/* OAuth Buttons */}
-        <div className="space-y-2">
+        {/* Customer OAuth 1-Click Buttons */}
+        <div className="space-y-2.5">
           <button
             type="button"
             onClick={() => loginWithOAuth('google')}
-            className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-2.5 px-4 text-xs font-bold text-neutral-800 dark:text-neutral-200 shadow-2xs transition-all active:scale-98 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-3 px-4 text-xs font-bold text-neutral-800 dark:text-neutral-200 shadow-2xs transition-all active:scale-98 cursor-pointer"
           >
             {/* Google Icon SVG */}
-            <svg className="h-4 w-4" viewBox="0 0 24 24">
+            <svg className="h-4.5 w-4.5" viewBox="0 0 24 24">
               <path
                 fill="#EA4335"
                 d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.3 9 5 12 5z"
@@ -84,10 +84,10 @@ export const AuthModal = () => {
           <button
             type="button"
             onClick={() => loginWithOAuth('discord')}
-            className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] py-2.5 px-4 text-xs font-bold text-white shadow-md shadow-[#5865F2]/20 transition-all active:scale-98 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] py-3 px-4 text-xs font-bold text-white shadow-md shadow-[#5865F2]/20 transition-all active:scale-98 cursor-pointer"
           >
             {/* Discord Icon SVG */}
-            <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+            <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
               <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
             </svg>
             <span>Continuar con Discord</span>
@@ -102,11 +102,11 @@ export const AuthModal = () => {
           </span>
         </div>
 
-        {/* Email Form */}
+        {/* Email Form for Customers */}
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 block mb-1">
-              Correo Electrónico *
+              Correo Electrónico
             </label>
             <div className="relative">
               <input
@@ -141,16 +141,21 @@ export const AuthModal = () => {
             type="submit"
             className="w-full flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 py-3 text-xs font-bold text-white shadow-md shadow-rose-600/25 transition-all active:scale-95 cursor-pointer"
           >
-            <span>Continuar a mi Cuenta</span>
+            <span>Entrar como Cliente</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </form>
 
-        <div className="pt-2 text-center">
-          <p className="text-[10px] text-neutral-400 flex items-center justify-center gap-1">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            <span>Tus datos y archivos están cifrados de extremo a extremo.</span>
-          </p>
+        {/* Footer Admin Link */}
+        <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 text-center">
+          <Link
+            href="/admin"
+            onClick={() => setIsAuthModalOpen(false)}
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-neutral-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+          >
+            <Lock className="h-3 w-3" />
+            <span>¿Eres el artista? Iniciar sesión en el Panel Admin</span>
+          </Link>
         </div>
       </div>
     </div>
