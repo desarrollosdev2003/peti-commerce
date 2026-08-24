@@ -297,11 +297,21 @@ const DraggingCardPreview: React.FC<{ order: Order; currency: 'USD' | 'ARS' }> =
 
 /* Main Kanban Board */
 export const KanbanBoard = () => {
-  const { orders, updateOrderStatus, deleteOrder, addOrderMessage, addDeliveredFile, currency } = useApp();
+  const { orders, updateOrderStatus, deleteOrder, addOrderMessage, addDeliveredFile, currency, refreshOrders } = useApp();
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [activeDraggingOrder, setActiveDraggingOrder] = useState<Order | null>(null);
   const [mobileActiveColumn, setMobileActiveColumn] = useState<OrderStatus>('pending');
   const [modalTab, setModalTab] = useState<'details' | 'chat'>('details');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshOrders();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Admin chat input states
   const [adminChatText, setAdminChatText] = useState('');
@@ -420,12 +430,24 @@ export const KanbanBoard = () => {
       {/* Header Info & Mobile Column Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold tracking-wider text-neutral-900 dark:text-white flex items-center gap-2">
-            <span>Mini Trello de Comisiones</span>
-            <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/20">
-              {orders.length} pedidos
-            </span>
-          </h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-xl font-bold tracking-wider text-neutral-900 dark:text-white flex items-center gap-2">
+              <span>Mini Trello de Comisiones</span>
+              <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                {orders.length} pedidos
+              </span>
+            </h2>
+
+            <button
+              onClick={handleManualRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-1 text-[11px] font-bold text-neutral-600 hover:text-rose-600 dark:text-neutral-400 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 hover:bg-rose-50 dark:hover:bg-neutral-700 px-2.5 py-1 rounded-xl transition-all cursor-pointer border border-neutral-200 dark:border-neutral-700"
+              title="Sincronizar pedidos desde la base de datos de Supabase"
+            >
+              <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin text-rose-500' : ''}`} />
+              <span>{isRefreshing ? 'Cargando...' : 'Sincronizar'}</span>
+            </button>
+          </div>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
             Arrastra y suelta tarjetas entre columnas o abre el modal para chatear con el cliente.
           </p>

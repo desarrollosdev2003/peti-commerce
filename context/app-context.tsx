@@ -27,6 +27,7 @@ interface AppContextType {
   currency: 'USD' | 'ARS';
   setCurrency: (c: 'USD' | 'ARS') => void;
   exchangeRate: number;
+  refreshOrders: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -95,78 +96,100 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Fetch real production orders and customers from Supabase on mount
-  useEffect(() => {
+  const refreshOrders = useCallback(async () => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
 
-    supabase
-      .from('orders')
-      .select('*, order_messages(*)')
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const mappedOrders: Order[] = data
-            .filter((d: any) => !DUMMY_ORDER_IDS.includes(d.id) && !DUMMY_ORDER_IDS.includes(d.order_number))
-            .map((d: any) => ({
-              id: d.id,
-              orderNumber: d.order_number,
-              customerId: d.customer_id,
-              customerName: d.customer_name,
-              customerEmail: d.customer_email,
-              total: Number(d.total),
-              paymentMethod: d.payment_method,
-              status: d.status,
-              createdAt: d.created_at,
-              estimatedDelivery: d.estimated_delivery,
-              notes: d.notes,
-              items: d.items || [],
-              deliveredFiles: d.delivered_files || [],
-              messages: (d.order_messages || []).map((m: any) => ({
-                id: m.id,
-                orderId: m.order_id,
-                sender: m.sender,
-                senderName: m.sender_name,
-                text: m.text,
-                attachmentUrl: m.attachment_url,
-                attachmentName: m.attachment_name,
-                type: m.type,
-                createdAt: m.created_at,
-                isRead: true,
-              })),
-            }));
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*, order_items(*), order_messages(*)')
+        .order('created_at', { ascending: false });
 
-          setOrders(mappedOrders);
+      if (!error && data) {
+        const mappedOrders: Order[] = data
+          .filter((d: any) => !DUMMY_ORDER_IDS.includes(d.id) && !DUMMY_ORDER_IDS.includes(d.order_number))
+          .map((d: any) => ({
+            id: d.id,
+            orderNumber: d.order_number,
+            customerId: d.customer_id,
+            customerName: d.customer_name,
+            customerEmail: d.customer_email,
+            total: Number(d.total),
+            paymentMethod: d.payment_method,
+            status: d.status,
+            createdAt: d.created_at,
+            estimatedDelivery: d.estimated_delivery,
+            notes: d.notes,
+            items: (d.order_items && d.order_items.length > 0)
+              ? d.order_items.map((it: any) => ({
+                  id: it.id,
+                  commissionId: it.commission_id,
+                  title: it.title,
+                  unitPrice: Number(it.unit_price),
+                  quantity: Number(it.quantity) || 1,
+                  sampleImage: it.sample_image,
+                  commissionData: {
+                    usageType: it.usage_type || 'personal',
+                    brief: it.brief || '',
+                    references: it.references || '',
+                    selectedOptions: it.selected_options || [],
+                  },
+                }))
+              : (d.items || []),
+            deliveredFiles: d.delivered_files || [],
+            messages: (d.order_messages || []).map((m: any) => ({
+              id: m.id,
+              orderId: m.order_id,
+              sender: m.sender,
+              senderName: m.sender_name,
+              text: m.text,
+              attachmentUrl: m.attachment_url,
+              attachmentName: m.attachment_name,
+              type: m.type,
+              createdAt: m.created_at,
+              isRead: true,
+            })),
+          }));
 
-          // Populate customers directory from real Supabase orders
-          const realCustomersMap = new Map<string, CustomerUser>();
-          mappedOrders.forEach((ord) => {
-            const email = ord.customerEmail.toLowerCase().trim();
-            if (!realCustomersMap.has(email)) {
-              realCustomersMap.set(email, {
-                id: ord.customerId || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-                name: ord.customerName,
-                email: ord.customerEmail,
-                discord: ord.notes?.includes('Discord:') ? ord.notes.replace('Discord:', '').trim() : undefined,
-                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-                role: 'customer',
-                createdAt: ord.createdAt,
-              });
+        setOrders(mappedOrders);
+
+        // Populate customers directory from real Supabase orders
+        const realCustomersMap = new Map<string, CustomerUser>();
+        mappedOrders.forEach((ord) => {
+          const email = ord.customerEmail.toLowerCase().trim();
+          if (!realCustomersMap.has(email)) {
+            realCustomersMap.set(email, {
+              id: ord.customerId || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+              name: ord.customerName,
+              email: ord.customerEmail,
+              discord: ord.notes?.includes('Discord:') ? ord.notes.replace('Discord:', '').trim() : undefined,
+              avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+              role: 'customer',
+              createdAt: ord.createdAt,
+            });
+          }
+        });
+
+        setCustomers((prev) => {
+          const combined = [...prev.filter((c) => !DUMMY_CUSTOMER_IDS.includes(c.id))];
+          realCustomersMap.forEach((newCust) => {
+            if (!combined.some((c) => c.email.toLowerCase() === newCust.email.toLowerCase())) {
+              combined.push(newCust);
             }
           });
-
-          setCustomers((prev) => {
-            const combined = [...prev.filter((c) => !DUMMY_CUSTOMER_IDS.includes(c.id))];
-            realCustomersMap.forEach((newCust) => {
-              if (!combined.some((c) => c.email.toLowerCase() === newCust.email.toLowerCase())) {
-                combined.push(newCust);
-              }
-            });
-            return combined;
-          });
-        }
-      });
+          return combined;
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching orders from Supabase:', err);
+    }
   }, []);
+
+  // Fetch real production orders and customers from Supabase on mount
+  useEffect(() => {
+    refreshOrders();
+  }, [refreshOrders]);
 
   // Multi-tab cross communication sync
   useEffect(() => {
@@ -349,6 +372,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setOrders((prev) => [orderWithMessages, ...prev]);
 
+    // Direct push to Supabase orders and order_items
+    const supabase = getSupabaseBrowserClient();
+    if (supabase) {
+      supabase
+        .from('orders')
+        .upsert({
+          id: order.id,
+          order_number: order.orderNumber,
+          customer_id: order.customerId || null,
+          customer_name: order.customerName,
+          customer_email: order.customerEmail,
+          total: order.total,
+          payment_method: order.paymentMethod,
+          status: order.status || 'pending',
+          notes: order.notes || null,
+          created_at: order.createdAt || new Date().toISOString(),
+          estimated_delivery: order.estimatedDelivery || null,
+        })
+        .then(() => {
+          if (order.items && order.items.length > 0) {
+            for (const it of order.items) {
+              supabase.from('order_items').upsert({
+                id: it.id || `item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+                order_id: order.id,
+                commission_id: it.commissionId,
+                title: it.title,
+                unit_price: it.unitPrice,
+                quantity: it.quantity || 1,
+                sample_image: it.sampleImage || null,
+                usage_type: it.commissionData?.usageType || 'personal',
+                brief: it.commissionData?.brief || '',
+                references: it.commissionData?.references || '',
+                selected_options: it.commissionData?.selectedOptions || [],
+                created_at: new Date().toISOString(),
+              }).then();
+            }
+          }
+        });
+    }
+
     // Ensure customer is registered in customers directory
     const existingCustomer = customers.find(
       (c) => c.email.toLowerCase() === order.customerEmail.toLowerCase()
@@ -488,6 +551,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currency,
         setCurrency,
         exchangeRate,
+        refreshOrders,
       }}
     >
       {children}

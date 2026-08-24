@@ -26,22 +26,42 @@ export async function POST(request: Request) {
     // Store pending order in Supabase database
     const supabase = getSupabaseServerClient();
     if (supabase) {
+      // 1. Insert into orders table
       await supabase.from('orders').upsert({
         id: order.id,
         order_number: order.orderNumber,
-        customer_id: order.customerId,
+        customer_id: order.customerId || null,
         customer_name: order.customerName,
         customer_email: order.customerEmail,
         total: order.total,
         payment_method: 'polar',
         status: 'pending',
-        notes: order.notes,
-        items: order.items,
-        created_at: order.createdAt,
-        estimated_delivery: order.estimatedDelivery,
+        notes: order.notes || null,
+        created_at: order.createdAt || new Date().toISOString(),
+        estimated_delivery: order.estimatedDelivery || null,
       });
 
-      // Insert welcome message in order chat
+      // 2. Insert items into order_items table
+      if (order.items && order.items.length > 0) {
+        for (const it of order.items) {
+          await supabase.from('order_items').upsert({
+            id: it.id || `item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            order_id: order.id,
+            commission_id: it.commissionId,
+            title: it.title,
+            unit_price: it.unitPrice,
+            quantity: it.quantity || 1,
+            sample_image: it.sampleImage || null,
+            usage_type: it.commissionData?.usageType || 'personal',
+            brief: it.commissionData?.brief || '',
+            references: it.commissionData?.references || '',
+            selected_options: it.commissionData?.selectedOptions || [],
+            created_at: new Date().toISOString(),
+          });
+        }
+      }
+
+      // 3. Insert welcome message in order chat
       await supabase.from('order_messages').insert({
         id: `msg-${Date.now()}-welcome`,
         order_id: order.id,
