@@ -25,6 +25,7 @@ import {
   RefreshCw,
   ExternalLink,
   ChevronRight,
+  Radio,
 } from 'lucide-react';
 
 const PROGRESS_STEPS: { id: OrderStatus; label: string; desc: string }[] = [
@@ -39,39 +40,68 @@ export default function OrderTrackingPage() {
   const router = useRouter();
   const rawId = (params?.id as string) || '';
   
-  const { getOrder, addOrderMessage, updateOrderStatus, artist, currency } = useApp();
+  const { orders, getOrder, addOrderMessage, updateOrderStatus, artist, currency } = useApp();
   const [order, setOrder] = useState<Order | null>(null);
   const [inputText, setInputText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImagePreview, setSelectedImagePreview] = useState<string | null>(null);
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load order data
+  // Sync order state whenever AppContext orders change
   useEffect(() => {
     if (rawId) {
       const found = getOrder(rawId);
       if (found) {
-        setOrder(found);
+        setOrder((prev) => {
+          if (!prev) return found;
+          // Only update if something changed
+          if (prev.status !== found.status || prev.messages?.length !== found.messages?.length || prev.updatedAt !== found.updatedAt) {
+            return found;
+          }
+          return prev;
+        });
       }
     }
-  }, [rawId, getOrder]);
+  }, [rawId, orders, getOrder]);
 
   // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [order?.messages]);
 
-  // Realtime Supabase Channel Subscription (if configured)
+  // Realtime Supabase Channel Subscription (orders status & chat messages)
   useEffect(() => {
     if (!order) return;
 
     const supabase = getSupabaseBrowserClient();
     if (!supabase) return;
 
+    const channelName = `realtime-order-${order.id}-${order.orderNumber.replace('#', '')}`;
     const channel = supabase
-      .channel(`order-chat-${order.id}`)
+      .channel(channelName)
+      // 1. Live Order Status Updates (When moved in Mini Trello)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          if (
+            updated &&
+            (updated.id === order.id || updated.order_number === order.orderNumber) &&
+            updated.status
+          ) {
+            setOrder((prev) => (prev ? { ...prev, status: updated.status, updatedAt: new Date().toISOString() } : null));
+          }
+        }
+      )
+      // 2. Live Chat Messages Updates
       .on(
         'postgres_changes',
         {
@@ -92,12 +122,17 @@ export default function OrderTrackingPage() {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsLiveConnected(true);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
+      setIsLiveConnected(false);
     };
-  }, [order]);
+  }, [order?.id, order?.orderNumber]);
 
   if (!order) {
     return (
@@ -203,16 +238,25 @@ export default function OrderTrackingPage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Consultar otro pedido</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-wider text-neutral-900 dark:text-white font-mono">
               Pedido {order.orderNumber}
             </h1>
             <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
               order.status === 'completed'
-                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
             }`}>
               {order.status === 'completed' ? 'Completado' : 'En Avance'}
+            </span>
+
+            {/* Live Realtime Pulsing Indicator */}
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span>En vivo</span>
             </span>
           </div>
         </div>
@@ -237,7 +281,7 @@ export default function OrderTrackingPage() {
         </div>
       </div>
 
-      {/* Progress Timeline Stepper */}
+      {/* Progress Timeline Stepper (Updates live when moved in Trello) */}
       <div className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 sm:p-6 shadow-xs">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {PROGRESS_STEPS.map((step, idx) => {
@@ -246,9 +290,9 @@ export default function OrderTrackingPage() {
             return (
               <div
                 key={step.id}
-                className={`flex flex-col p-3 rounded-2xl border transition-all ${
+                className={`flex flex-col p-3.5 rounded-2xl border transition-all duration-300 ${
                   isCurrent
-                    ? 'border-rose-500 bg-rose-500/10 shadow-xs'
+                    ? 'border-rose-500 bg-rose-500/10 shadow-md shadow-rose-500/10 scale-102 ring-1 ring-rose-500/30'
                     : isPassed
                     ? 'border-emerald-500/40 bg-emerald-500/5'
                     : 'border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/40 opacity-60'
@@ -265,12 +309,15 @@ export default function OrderTrackingPage() {
                     Paso {idx + 1}
                   </span>
                   {isPassed ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500 animate-in zoom-in-50" />
                   ) : isCurrent ? (
-                    <span className="h-2 w-2 rounded-full bg-rose-500 animate-ping" />
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+                    </span>
                   ) : null}
                 </div>
-                <h4 className="font-bold text-xs text-neutral-900 dark:text-white mt-1">
+                <h4 className="font-bold text-xs text-neutral-900 dark:text-white mt-1.5">
                   {step.label.split('. ')[1]}
                 </h4>
                 <p className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-0.5 leading-tight">

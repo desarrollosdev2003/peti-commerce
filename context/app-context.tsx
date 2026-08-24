@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { ArtistProfile, Commission, Order, OrderStatus, OrderMessage, DeliveredFile, CustomerUser } from '@/lib/types';
 import { INITIAL_ARTIST, INITIAL_COMMISSIONS, INITIAL_ORDERS, INITIAL_CUSTOMERS } from '@/lib/initial-data';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 interface AppContextType {
   artist: ArtistProfile;
@@ -160,6 +161,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Global Realtime Supabase Subscription for orders table updates
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('global-orders-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders' },
+        (payload) => {
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            const updated = payload.new as any;
+            setOrders((prev) =>
+              prev.map((o) =>
+                o.id === updated.id || o.orderNumber === updated.order_number
+                  ? { ...o, status: updated.status || o.status, updatedAt: updated.updated_at || new Date().toISOString() }
+                  : o
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   useEffect(() => {
     if (!isLoaded) return;
     try {
@@ -282,12 +313,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus) => {
+  const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
     setOrders((prev) =>
       prev.map((o) =>
         o.id === orderId ? { ...o, status, updatedAt: new Date().toISOString() } : o
       )
     );
+
+    // Sync with Supabase Database in Realtime
+    const supabase = getSupabaseBrowserClient();
+    if (supabase) {
+      try {
+        await supabase
+          .from('orders')
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', orderId);
+      } catch (err) {
+        console.error('Error updating order status in Supabase:', err);
+      }
+    }
   };
 
   const deleteOrder = (orderId: string) => {
@@ -330,6 +374,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return o;
       })
     );
+
+    // Push to Supabase if connected
+    const supabase = getSupabaseBrowserClient();
+    if (supabase) {
+      supabase.from('order_messages').insert({
+        id: newMessage.id,
+        order_id: orderId,
+        sender: newMessage.sender,
+        sender_name: newMessage.senderName,
+        text: newMessage.text,
+        attachment_url: newMessage.attachmentUrl,
+        attachment_name: newMessage.attachmentName,
+        type: newMessage.type,
+        created_at: newMessage.createdAt,
+      }).then();
+    }
 
     return newMessage;
   };
