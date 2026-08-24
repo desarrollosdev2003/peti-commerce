@@ -8,8 +8,13 @@ interface AuthContextType {
   user: CustomerUser | null;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
-  loginWithOAuth: (provider: 'google' | 'discord') => Promise<{ success: boolean; error?: string }>;
-  loginCustomerWithEmail: (email: string, name?: string) => CustomerUser;
+  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  loginCustomerWithPassword: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  registerCustomerWithPassword: (
+    email: string,
+    pass: string,
+    name?: string
+  ) => Promise<{ success: boolean; error?: string; message?: string }>;
   loginAdminWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (data: Partial<CustomerUser>) => void;
@@ -67,12 +72,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userEmail = (supaUser.email || '').toLowerCase().trim();
         const authorized = getAuthorizedAdminEmails();
         const isUserAdmin = supaUser.user_metadata?.role === 'admin' || authorized.includes(userEmail);
-        
+
         const mappedUser: CustomerUser = {
           id: supaUser.id,
           email: userEmail,
-          name: supaUser.user_metadata?.full_name || userEmail.split('@')[0] || (isUserAdmin ? 'Peti' : 'Cliente'),
-          avatar: supaUser.user_metadata?.avatar_url || (isUserAdmin ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'),
+          name:
+            supaUser.user_metadata?.full_name ||
+            supaUser.user_metadata?.name ||
+            userEmail.split('@')[0] ||
+            (isUserAdmin ? 'Peti' : 'Cliente'),
+          avatar:
+            supaUser.user_metadata?.avatar_url ||
+            (isUserAdmin
+              ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+              : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'),
           role: isUserAdmin ? 'admin' : 'customer',
           createdAt: supaUser.created_at,
         };
@@ -86,12 +99,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userEmail = (supaUser.email || '').toLowerCase().trim();
         const authorized = getAuthorizedAdminEmails();
         const isUserAdmin = supaUser.user_metadata?.role === 'admin' || authorized.includes(userEmail);
-        
+
         setUser({
           id: supaUser.id,
           email: userEmail,
-          name: supaUser.user_metadata?.full_name || userEmail.split('@')[0] || (isUserAdmin ? 'Peti' : 'Cliente'),
-          avatar: supaUser.user_metadata?.avatar_url || (isUserAdmin ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'),
+          name:
+            supaUser.user_metadata?.full_name ||
+            supaUser.user_metadata?.name ||
+            userEmail.split('@')[0] ||
+            (isUserAdmin ? 'Peti' : 'Cliente'),
+          avatar:
+            supaUser.user_metadata?.avatar_url ||
+            (isUserAdmin
+              ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+              : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'),
           role: isUserAdmin ? 'admin' : 'customer',
           createdAt: supaUser.created_at,
         });
@@ -105,41 +126,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Customer OAuth Login (Always role 'customer')
-  const loginWithOAuth = async (
-    provider: 'google' | 'discord'
-  ): Promise<{ success: boolean; error?: string }> => {
+  // Customer Google Login
+  const loginWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
     const supabase = getSupabaseBrowserClient();
     if (supabase) {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/account`,
         },
       });
 
       if (error) {
-        console.error(`Supabase OAuth (${provider}) Error:`, error.message);
+        console.error('Supabase Google OAuth Error:', error.message);
         return {
           success: false,
           error:
             error.message.includes('not enabled') || error.message.includes('Unsupported provider')
-              ? `El proveedor ${provider === 'google' ? 'Google' : 'Discord'} aún no ha sido activado en tu panel de Supabase (Authentication > Providers).`
+              ? 'El proveedor Google aún no está activado en tu Supabase (Authentication > Providers).'
               : error.message,
         };
       }
       return { success: true };
     }
 
-    // Fallback simulation for OAuth in local mode
-    const simulatedName = provider === 'google' ? 'Usuario Google' : 'Usuario Discord';
-    const cleanEmail = `${provider.toLowerCase()}.user@gmail.com`;
+    // Fallback simulation for Google
     const customerUser: CustomerUser = {
       id: `usr-${Date.now()}`,
-      email: cleanEmail,
-      name: simulatedName,
+      email: 'usuario.google@gmail.com',
+      name: 'Usuario Google',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-      discord: provider === 'discord' ? '@discord_user' : undefined,
       role: 'customer',
       createdAt: new Date().toISOString(),
     };
@@ -148,20 +164,117 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { success: true };
   };
 
-  // Customer Email Login (Always role 'customer')
-  const loginCustomerWithEmail = (email: string, name?: string): CustomerUser => {
+  // Customer Login with Email + Password
+  const loginCustomerWithPassword = async (
+    email: string,
+    pass: string
+  ): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
+    const supabase = getSupabaseBrowserClient();
+
+    if (supabase) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: pass,
+      });
+
+      if (error) {
+        console.error('Customer Login Error:', error.message);
+        return {
+          success: false,
+          error:
+            error.message === 'Invalid login credentials'
+              ? 'Correo o contraseña incorrectos. Si no tienes cuenta, haz clic en "Crear Cuenta".'
+              : error.message,
+        };
+      }
+
+      if (data.user) {
+        const customerUser: CustomerUser = {
+          id: data.user.id,
+          email: cleanEmail,
+          name: data.user.user_metadata?.full_name || cleanEmail.split('@')[0],
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+          role: 'customer',
+          createdAt: data.user.created_at,
+        };
+        setUser(customerUser);
+        setIsAuthModalOpen(false);
+        return { success: true };
+      }
+    }
+
+    // Fallback local mode
     const customerUser: CustomerUser = {
       id: `usr-${Date.now()}`,
       email: cleanEmail,
-      name: name?.trim() || cleanEmail.split('@')[0],
+      name: cleanEmail.split('@')[0],
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
       role: 'customer',
       createdAt: new Date().toISOString(),
     };
     setUser(customerUser);
     setIsAuthModalOpen(false);
-    return customerUser;
+    return { success: true };
+  };
+
+  // Customer Register with Email + Password
+  const registerCustomerWithPassword = async (
+    email: string,
+    pass: string,
+    name?: string
+  ): Promise<{ success: boolean; error?: string; message?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = name?.trim() || cleanEmail.split('@')[0];
+    const supabase = getSupabaseBrowserClient();
+
+    if (supabase) {
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password: pass,
+        options: {
+          data: {
+            full_name: cleanName,
+            role: 'customer',
+          },
+        },
+      });
+
+      if (error) {
+        console.error('Customer SignUp Error:', error.message);
+        return { success: false, error: error.message };
+      }
+
+      if (data.user) {
+        const customerUser: CustomerUser = {
+          id: data.user.id,
+          email: cleanEmail,
+          name: cleanName,
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+          role: 'customer',
+          createdAt: data.user.created_at,
+        };
+        setUser(customerUser);
+        setIsAuthModalOpen(false);
+        return {
+          success: true,
+          message: '¡Cuenta creada con éxito!',
+        };
+      }
+    }
+
+    // Fallback local mode
+    const customerUser: CustomerUser = {
+      id: `usr-${Date.now()}`,
+      email: cleanEmail,
+      name: cleanName,
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+      role: 'customer',
+      createdAt: new Date().toISOString(),
+    };
+    setUser(customerUser);
+    setIsAuthModalOpen(false);
+    return { success: true };
   };
 
   // Real Supabase Auth Email & Password Login for Admin
@@ -171,7 +284,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ success: boolean; error?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     const authorizedEmails = getAuthorizedAdminEmails();
-    const isAuthorizedEmail = authorizedEmails.includes(cleanEmail) || cleanEmail.includes('peti.artist') || cleanEmail.includes('francoberlochi');
+    const isAuthorizedEmail =
+      authorizedEmails.includes(cleanEmail) ||
+      cleanEmail.includes('peti.artist') ||
+      cleanEmail.includes('francoberlochi');
 
     if (!isAuthorizedEmail) {
       return {
@@ -191,9 +307,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Supabase Auth Error:', error.message);
         return {
           success: false,
-          error: error.message === 'Invalid login credentials'
-            ? 'Contraseña incorrecta o usuario no registrado en Supabase Auth.'
-            : error.message,
+          error:
+            error.message === 'Invalid login credentials'
+              ? 'Contraseña incorrecta o usuario no registrado en Supabase Auth.'
+              : error.message,
         };
       }
 
@@ -254,8 +371,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         isAuthModalOpen,
         setIsAuthModalOpen,
-        loginWithOAuth,
-        loginCustomerWithEmail,
+        loginWithGoogle,
+        loginCustomerWithPassword,
+        registerCustomerWithPassword,
         loginAdminWithPassword,
         logout,
         updateProfile,
