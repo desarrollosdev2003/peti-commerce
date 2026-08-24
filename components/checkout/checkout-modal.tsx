@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Loader2,
   Lock,
+  FlaskConical,
 } from 'lucide-react';
 
 interface CheckoutModalProps {
@@ -33,10 +34,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   const router = useRouter();
   const { items, subtotal: total, clearCart } = useCart();
-  const { currency } = useApp();
+  const { currency, addOrder } = useApp();
   const { user } = useAuth();
 
-  const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'polar'>(
+  const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'polar' | 'test'>(
     currency === 'ARS' ? 'mercadopago' : 'polar'
   );
   const [customerName, setCustomerName] = useState(user?.name || '');
@@ -79,6 +80,27 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       estimatedDelivery: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     };
 
+    // Test Sandbox Mode (Immediate order creation for E2E testing)
+    if (paymentMethod === 'test') {
+      try {
+        // Send order to create-preference API or directly to Supabase
+        await fetch('/api/payments/mercadopago/create-preference', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order: pendingOrder }),
+        }).catch(() => {});
+
+        addOrder(pendingOrder);
+        clearCart();
+        setIsProcessing(false);
+        onSuccess();
+        router.push(`/track/${orderNumber.replace('#', '')}`);
+        return;
+      } catch (err: any) {
+        console.error(err);
+      }
+    }
+
     try {
       // Call payment gateway creation
       const endpoint =
@@ -95,7 +117,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const data = await res.json();
 
       if (!res.ok || !data.redirectUrl) {
-        throw new Error(data.error || 'No se pudo generar el enlace de pago con la pasarela.');
+        const errorMsg =
+          typeof data.error === 'string'
+            ? data.error
+            : typeof data.error === 'object' && data.error !== null
+            ? data.error.message || JSON.stringify(data.error)
+            : 'No se pudo generar el enlace de pago con la pasarela.';
+        throw new Error(errorMsg);
       }
 
       // Clear local cart and redirect immediately to real gateway
@@ -103,7 +131,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       window.location.href = data.redirectUrl;
     } catch (err: any) {
       console.error('Error procesando pago:', err);
-      setError(err.message || 'Hubo un error comunicando con la pasarela de pago. Por favor intenta de nuevo.');
+      const displayError =
+        typeof err?.message === 'string' && err.message !== '[object Object]'
+          ? err.message
+          : 'Hubo un error comunicando con la pasarela de pago. Por favor intenta de nuevo.';
+      setError(displayError);
       setIsProcessing(false);
     }
   };
@@ -132,7 +164,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold tracking-wider text-neutral-900 dark:text-white">
-                Confirmar Encargo & Pasarela de Pago
+                Confirmar Encargo & Pago
               </h3>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 Total a abonar: <strong className="text-rose-600 dark:text-rose-400">{formatCurrency(total, currency)}</strong>
@@ -144,7 +176,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             {/* Payment Gateway Selector */}
             <div className="space-y-1.5">
               <label className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Selecciona la Pasarela Oficial
+                Método de Pago
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {/* Mercado Pago */}
@@ -190,6 +222,25 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     Pagos internacionales (Stripe, Tarjetas globales)
                   </span>
                 </div>
+              </div>
+
+              {/* Testing / Sandbox Option */}
+              <div
+                onClick={() => setPaymentMethod('test')}
+                className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition-all text-xs ${
+                  paymentMethod === 'test'
+                    ? 'border-amber-500 bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500 font-bold'
+                    : 'border-dashed border-neutral-300 dark:border-neutral-700 text-neutral-500 hover:border-amber-400'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FlaskConical className="h-4 w-4 text-amber-500" />
+                  <div>
+                    <p className="text-[11px] font-bold">Modo Test / Compra de Prueba</p>
+                    <p className="text-[10px] text-neutral-400 font-normal">Crea el pedido directamente sin cobrar tarjeta para testear Trello y Chat.</p>
+                  </div>
+                </div>
+                {paymentMethod === 'test' && <CheckCircle2 className="h-4 w-4 text-amber-500" />}
               </div>
             </div>
 
@@ -259,7 +310,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 {isProcessing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Redirigiendo a {paymentMethod === 'mercadopago' ? 'Mercado Pago' : 'Polar.sh'}...</span>
+                    <span>Procesando...</span>
                   </>
                 ) : (
                   <>
@@ -267,7 +318,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <span>
                       {paymentMethod === 'mercadopago'
                         ? `Pagar ${formatCurrency(total, 'ARS')} con Mercado Pago`
-                        : `Pagar $${total} USD con Polar.sh (Stripe)`}
+                        : paymentMethod === 'polar'
+                        ? `Pagar $${total} USD con Polar.sh (Stripe)`
+                        : `Confirmar Pedido de Prueba ($${total} USD)`}
                     </span>
                   </>
                 )}

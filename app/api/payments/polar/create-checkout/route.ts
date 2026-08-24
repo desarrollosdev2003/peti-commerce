@@ -53,9 +53,46 @@ export async function POST(request: Request) {
       });
     }
 
+    const totalCents = Math.round(order.total * 100);
+    const itemTitles = order.items.map((i) => i.title).join(', ') || 'Comisión de Arte';
+
+    // 1. Create a product in Polar with the exact order price
+    const productPayload = {
+      name: `Encargo ${order.orderNumber} • ${itemTitles.substring(0, 100)}`,
+      description: `Comisión personalizada por Peti (${order.items[0]?.commissionData?.usageType === 'commercial' ? 'Uso Comercial' : 'Uso Personal'})`,
+      prices: [
+        {
+          amount_type: 'fixed',
+          price_amount: totalCents,
+          currency: 'usd',
+        },
+      ],
+    };
+
+    const prodRes = await fetch('https://api.polar.sh/v1/products/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${polarAccessToken}`,
+      },
+      body: JSON.stringify(productPayload),
+    });
+
+    if (!prodRes.ok) {
+      const prodErr = await prodRes.json().catch(() => ({}));
+      console.error('Error creating product in Polar:', prodErr);
+      const msg = typeof prodErr.detail === 'string'
+        ? prodErr.detail
+        : prodErr.detail?.[0]?.msg || 'Error al preparar el producto en Polar';
+      return NextResponse.json({ error: msg }, { status: prodRes.status });
+    }
+
+    const prodData = await prodRes.json();
+    const productId = prodData.id;
+
+    // 2. Create the Checkout Session
     const checkoutPayload = {
-      amount: Math.round(order.total * 100), // Polar expects integer in cents (e.g. $95.00 -> 9500)
-      currency: 'usd',
+      products: [productId],
       customer_email: order.customerEmail,
       customer_name: order.customerName,
       success_url: `${successUrl}?checkout_id={CHECKOUT_ID}`,
@@ -65,8 +102,7 @@ export async function POST(request: Request) {
       },
     };
 
-    // Call Polar.sh Custom Checkout API
-    let polarRes = await fetch('https://api.polar.sh/v1/checkouts/custom/', {
+    const checkoutRes = await fetch('https://api.polar.sh/v1/checkouts/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,27 +111,16 @@ export async function POST(request: Request) {
       body: JSON.stringify(checkoutPayload),
     });
 
-    if (!polarRes.ok && polarRes.status === 404) {
-      polarRes = await fetch('https://api.polar.sh/v1/checkouts/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${polarAccessToken}`,
-        },
-        body: JSON.stringify(checkoutPayload),
-      });
+    if (!checkoutRes.ok) {
+      const errData = await checkoutRes.json().catch(() => ({}));
+      console.error('Polar Checkout API Error:', errData);
+      const msg = typeof errData.detail === 'string'
+        ? errData.detail
+        : errData.detail?.[0]?.msg || 'Error creando sesión de checkout en Polar';
+      return NextResponse.json({ error: msg }, { status: checkoutRes.status });
     }
 
-    if (!polarRes.ok) {
-      const errData = await polarRes.json().catch(() => ({}));
-      console.error('Polar API Error:', errData);
-      return NextResponse.json(
-        { error: errData.detail || 'Error creando sesión de checkout en Polar' },
-        { status: polarRes.status }
-      );
-    }
-
-    const data = await polarRes.json();
+    const data = await checkoutRes.json();
     return NextResponse.json({
       success: true,
       redirectUrl: data.url || data.checkout_url,

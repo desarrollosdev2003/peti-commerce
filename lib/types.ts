@@ -2,7 +2,7 @@ export type UsageType = 'personal' | 'commercial';
 
 export type OrderStatus = 'pending' | 'in_progress' | 'in_review' | 'completed' | 'cancelled';
 
-export type PaymentMethod = 'mercadopago' | 'polar';
+export type PaymentMethod = 'mercadopago' | 'polar' | 'test';
 
 export interface CustomerUser {
   id: string;
