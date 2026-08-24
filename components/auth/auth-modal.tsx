@@ -6,15 +6,12 @@ import {
   X,
   Mail,
   User,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
-  CheckCircle2,
-  Crown,
 } from 'lucide-react';
 
 export const AuthModal = () => {
-  const { isAuthModalOpen, setIsAuthModalOpen, login, loginAsAdmin, loginWithOAuth } = useAuth();
+  const { isAuthModalOpen, setIsAuthModalOpen, login, loginWithOAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [discord, setDiscord] = useState('');
@@ -26,10 +23,6 @@ export const AuthModal = () => {
     e.preventDefault();
     if (!email.trim()) return;
     login(email, name, discord);
-  };
-
-  const handleQuickDemoUser = (demoEmail: string, demoName: string, demoDiscord: string) => {
-    login(demoEmail, demoName, demoDiscord, 'customer');
   };
 
   return (
@@ -49,13 +42,13 @@ export const AuthModal = () => {
         {/* Modal Header */}
         <div className="text-center space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-rose-500">
-            Portal de Clientes
+            Autenticación Segura
           </span>
           <h3 className="text-lg sm:text-xl font-bold tracking-wider text-neutral-900 dark:text-white">
-            {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta de Cliente'}
+            {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
           </h3>
           <p className="text-xs text-neutral-500 max-w-xs mx-auto">
-            Accede a todos tus pedidos, centro de mensajes y descargas de bocetos con Peti.
+            Accede a tus encargos, bandeja de chat con Peti y panel de descargas.
           </p>
         </div>
 
@@ -64,7 +57,7 @@ export const AuthModal = () => {
           <button
             type="button"
             onClick={() => loginWithOAuth('google')}
-            className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-2.5 px-4 text-xs font-bold text-neutral-800 dark:text-neutral-200 shadow-2xs transition-all active:scale-98"
+            className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/80 hover:bg-neutral-100 dark:hover:bg-neutral-800 py-2.5 px-4 text-xs font-bold text-neutral-800 dark:text-neutral-200 shadow-2xs transition-all active:scale-98 cursor-pointer"
           >
             {/* Google Icon SVG */}
             <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -91,7 +84,7 @@ export const AuthModal = () => {
           <button
             type="button"
             onClick={() => loginWithOAuth('discord')}
-            className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] py-2.5 px-4 text-xs font-bold text-white shadow-md shadow-[#5865F2]/20 transition-all active:scale-98"
+            className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] py-2.5 px-4 text-xs font-bold text-white shadow-md shadow-[#5865F2]/20 transition-all active:scale-98 cursor-pointer"
           >
             {/* Discord Icon SVG */}
             <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
@@ -137,7 +130,7 @@ export const AuthModal = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Alex / Kuro"
+                placeholder="Nombre o alias"
                 className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 py-2.5 pl-9 pr-3.5 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:outline-none"
               />
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
@@ -146,35 +139,18 @@ export const AuthModal = () => {
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 py-3 text-xs font-bold text-white shadow-md shadow-rose-600/25 transition-all active:scale-95"
+            className="w-full flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 py-3 text-xs font-bold text-white shadow-md shadow-rose-600/25 transition-all active:scale-95 cursor-pointer"
           >
-            <span>{mode === 'login' ? 'Entrar a mi Cuenta' : 'Registrarme'}</span>
+            <span>Continuar a mi Cuenta</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </form>
 
-        {/* Quick Demo Accounts for Testing */}
-        <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 space-y-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block text-center">
-            Alternar Rol / Acceso Rápido de Prueba
-          </span>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickDemoUser('alex.rivers@gmail.com', 'Alex Rivers', 'alex_rivers#1337')}
-              className="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-rose-50 dark:hover:bg-neutral-700 text-[10px] font-semibold text-neutral-700 dark:text-neutral-300 text-left transition-colors truncate"
-            >
-              👤 Alex Rivers (Cliente)
-            </button>
-            <button
-              type="button"
-              onClick={loginAsAdmin}
-              className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 text-left transition-colors truncate flex items-center gap-1"
-            >
-              <Crown className="h-3.5 w-3.5 shrink-0" />
-              <span>Peti (Admin)</span>
-            </button>
-          </div>
+        <div className="pt-2 text-center">
+          <p className="text-[10px] text-neutral-400 flex items-center justify-center gap-1">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+            <span>Tus datos y archivos están cifrados de extremo a extremo.</span>
+          </p>
         </div>
       </div>
     </div>
