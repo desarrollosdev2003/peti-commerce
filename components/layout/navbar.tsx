@@ -19,7 +19,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { LanguageToggle } from '@/components/ui/language-toggle';
+import { PreferencesDropdown } from '@/components/ui/preferences-dropdown';
 import { useCart } from '@/context/cart-context';
 import { useApp } from '@/context/app-context';
 import { useAuth } from '@/context/auth-context';
@@ -135,18 +135,8 @@ export const Navbar = () => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2.5">
-          {/* Language Toggle Button */}
-          <LanguageToggle />
-
-          {/* Currency switch */}
-          <button
-            onClick={() => setCurrency(currency === 'USD' ? 'ARS' : 'USD')}
-            className="flex items-center gap-0.5 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-semibold border border-rose-200/80 dark:border-neutral-800 hover:bg-rose-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300 transition-colors shadow-2xs"
-            title={t('nav_currency')}
-          >
-            <span className="font-bold text-rose-500 dark:text-rose-400">$</span>
-            <span className="text-[11px] font-mono font-bold">{currency}</span>
-          </button>
+          {/* Combined Language & Currency Preferences Dropdown */}
+          <PreferencesDropdown />
 
           <ThemeToggle />
 

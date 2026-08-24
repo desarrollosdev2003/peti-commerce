@@ -7,19 +7,21 @@ test.describe('Peti E-Commerce • Flujo Completo E2E', () => {
     // Check artist name and bio
     await expect(page.locator('body')).toContainText('Peti');
 
-    // Check Language Toggle button exists
-    const langToggle = page.locator('[data-testid="language-toggle"]');
-    await expect(langToggle).toBeVisible();
+    // Check Preferences dropdown button exists
+    const prefDropdown = page.locator('[data-testid="language-toggle"]');
+    await expect(prefDropdown).toBeVisible();
 
     // Verify initial load is in Spanish
     await expect(page.locator('body')).toContainText(/Comisiones|Solicitar Comisión/i);
 
-    // Test Language switching to English
-    await langToggle.click();
+    // Open dropdown and switch to English
+    await prefDropdown.click();
+    await page.locator('[data-testid="lang-option-en"]').click();
     await expect(page.locator('body')).toContainText(/Commissions|Order Commission/i);
 
-    // Switch back to Spanish
-    await langToggle.click();
+    // Open dropdown and switch back to Spanish
+    await prefDropdown.click();
+    await page.locator('[data-testid="lang-option-es"]').click();
     await expect(page.locator('body')).toContainText(/Comisiones|Solicitar Comisión/i);
   });
 
