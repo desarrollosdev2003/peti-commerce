@@ -8,7 +8,7 @@ interface AuthContextType {
   user: CustomerUser | null;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
-  loginWithOAuth: (provider: 'google' | 'discord') => Promise<void>;
+  loginWithOAuth: (provider: 'google' | 'discord') => Promise<{ success: boolean; error?: string }>;
   loginCustomerWithEmail: (email: string, name?: string) => CustomerUser;
   loginAdminWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -106,16 +106,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Customer OAuth Login (Always role 'customer')
-  const loginWithOAuth = async (provider: 'google' | 'discord') => {
+  const loginWithOAuth = async (
+    provider: 'google' | 'discord'
+  ): Promise<{ success: boolean; error?: string }> => {
     const supabase = getSupabaseBrowserClient();
     if (supabase) {
-      await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/account`,
         },
       });
-      return;
+
+      if (error) {
+        console.error(`Supabase OAuth (${provider}) Error:`, error.message);
+        return {
+          success: false,
+          error:
+            error.message.includes('not enabled') || error.message.includes('Unsupported provider')
+              ? `El proveedor ${provider === 'google' ? 'Google' : 'Discord'} aún no ha sido activado en tu panel de Supabase (Authentication > Providers).`
+              : error.message,
+        };
+      }
+      return { success: true };
     }
 
     // Fallback simulation for OAuth in local mode
@@ -132,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setUser(customerUser);
     setIsAuthModalOpen(false);
+    return { success: true };
   };
 
   // Customer Email Login (Always role 'customer')
