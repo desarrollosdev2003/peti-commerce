@@ -195,16 +195,53 @@ export default function OrderTrackingPage() {
           <AlertCircle className="h-6 w-6" />
         </div>
         <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
-          Encargo no encontrado
+          {language === 'en' ? 'Order not found' : 'Encargo no encontrado'}
         </h2>
         <p className="text-xs text-neutral-500 max-w-sm">
-          No pudimos localizar ningún pedido con el identificador &quot;{rawId}&quot;.
+          {language === 'en'
+            ? `We could not locate any order with ID "${rawId}".`
+            : `No pudimos localizar ningún pedido con el identificador "${rawId}".`}
         </p>
         <Link
           href="/track"
-          className="rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-2 text-xs font-bold text-white shadow-md"
+          className="rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-2 text-xs font-bold text-white shadow-md cursor-pointer"
         >
-          Volver al buscador
+          {language === 'en' ? 'Back to Search' : 'Volver al buscador'}
+        </Link>
+      </div>
+    );
+  }
+
+  // Privacy Check: An authenticated customer cannot view another customer's order
+  const isOrderOwner = Boolean(
+    (order.customerId && user?.id && order.customerId === user.id) ||
+    (order.customerEmail && user?.email && order.customerEmail.toLowerCase() === user.email.toLowerCase()) ||
+    !user // Guest with direct link / order receipt
+  );
+
+  const isAuthorized = isViewerAdmin || isOrderOwner;
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center space-y-4 max-w-md mx-auto">
+        <div className="h-14 w-14 rounded-3xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+          <ShieldCheck className="h-7 w-7" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
+            {language === 'en' ? 'Private Order' : 'Encargo Privado'}
+          </h2>
+          <p className="text-xs text-neutral-500">
+            {language === 'en'
+              ? 'This tracking room and chat belong to another customer account. You cannot view other clients’ orders.'
+              : 'Esta sala de seguimiento y chat pertenecen a la cuenta de otro cliente. No tienes permiso para ver los pedidos de otros usuarios.'}
+          </p>
+        </div>
+        <Link
+          href="/track"
+          className="rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-2 text-xs font-bold text-white shadow-md cursor-pointer"
+        >
+          {language === 'en' ? 'Back to Search' : 'Volver al buscador'}
         </Link>
       </div>
     );

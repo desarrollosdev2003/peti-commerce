@@ -62,13 +62,12 @@ export default function CustomerAccountPage() {
     }
   }, [user]);
 
-  // Filter orders belonging to the user
+  // Filter orders strictly belonging to the user
   const userOrders = orders.filter((o) => {
     if (!user) return false;
     return (
       (o.customerId && o.customerId === user.id) ||
-      o.customerEmail.toLowerCase() === user.email.toLowerCase() ||
-      o.customerName.toLowerCase().includes(user.name.toLowerCase())
+      (o.customerEmail && o.customerEmail.toLowerCase() === user.email.toLowerCase())
     );
   });
 

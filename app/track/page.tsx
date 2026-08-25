@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '@/context/app-context';
+import { useAuth } from '@/context/auth-context';
 import { useLanguage } from '@/context/language-context';
 import {
   Search,
@@ -14,30 +15,61 @@ import {
   MessageSquare,
   ArrowRight,
   Package,
+  User,
+  Lock,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 
 export default function TrackSearchPage() {
   const router = useRouter();
   const { orders } = useApp();
+  const { user, isAdmin, setIsAuthModalOpen } = useAuth();
   const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
+
+  // Strict privacy: only show orders that belong to the logged-in user (or admin)
+  const userOrders = user
+    ? orders.filter(
+        (o) =>
+          (o.customerId && o.customerId === user.id) ||
+          (o.customerEmail && o.customerEmail.toLowerCase() === user.email.toLowerCase()) ||
+          isAdmin ||
+          user.role === 'admin'
+      )
+    : [];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanQuery = searchTerm.trim().replace('#', '');
     if (!cleanQuery) {
-      setError(language === 'en' ? 'Please enter an order number or email.' : 'Por favor ingresa un número de pedido o correo.');
+      setError(language === 'en' ? 'Please enter an order number.' : 'Por favor ingresa un número de pedido.');
       return;
     }
 
-    const found = orders.find(
-      (o) =>
+    const isEmailQuery = cleanQuery.includes('@');
+
+    // If searching by email while unauthenticated, require logging in or using exact order number
+    if (isEmailQuery && (!user || (!isAdmin && user.email.toLowerCase() !== cleanQuery.toLowerCase()))) {
+      setError(
+        language === 'en'
+          ? 'For privacy and security, please sign in to search orders by email, or enter your exact order number (e.g. PETI-1234).'
+          : 'Por privacidad y seguridad, inicia sesión para consultar por correo o ingresa tu número de pedido exacto (ej: PETI-1234).'
+      );
+      return;
+    }
+
+    const found = orders.find((o) => {
+      const isOrderNumMatch =
         o.orderNumber.replace('#', '').toLowerCase() === cleanQuery.toLowerCase() ||
-        o.customerEmail.toLowerCase() === cleanQuery.toLowerCase() ||
-        o.id.toLowerCase() === cleanQuery.toLowerCase()
-    );
+        o.id.toLowerCase() === cleanQuery.toLowerCase();
+      if (isOrderNumMatch) return true;
+
+      if (isEmailQuery && user && (isAdmin || user.email.toLowerCase() === cleanQuery.toLowerCase())) {
+        return o.customerEmail.toLowerCase() === cleanQuery.toLowerCase();
+      }
+      return false;
+    });
 
     if (found) {
       router.push(`/track/${found.orderNumber.replace('#', '')}`);
@@ -71,8 +103,8 @@ export default function TrackSearchPage() {
         </h1>
         <p className="max-w-md mx-auto text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
           {language === 'en'
-            ? 'Enter your order number (e.g. #PETI-8901) or email to track progress and chat with Peti.'
-            : 'Ingresa tu número de pedido (ej: #PETI-8901) o tu correo para ver el avance y chatear con Peti.'}
+            ? 'Enter your private order number (e.g. #PETI-8901) to track progress and chat with Peti.'
+            : 'Ingresa tu número de pedido privado (ej: #PETI-8901) para ver el avance y chatear con Peti.'}
         </p>
 
         {/* Search Bar Form */}
@@ -103,16 +135,33 @@ export default function TrackSearchPage() {
             </p>
           )}
         </form>
+
+        {/* Guest Sign In Callout */}
+        {!user && (
+          <div className="pt-2">
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-500 hover:text-rose-500 transition-colors font-medium cursor-pointer"
+            >
+              <Lock className="h-3 w-3" />
+              <span>
+                {language === 'en'
+                  ? 'Sign in to see all your orders automatically'
+                  : 'Inicia sesión para ver todos tus pedidos automáticamente'}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Orders List when user has orders */}
-      {orders.length > 0 && (
+      {/* Orders List ONLY shown for the authenticated user's own orders */}
+      {user && userOrders.length > 0 && (
         <div className="space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-neutral-400 block text-center sm:text-left">
-            {language === 'en' ? 'Your Recent Orders' : 'Tus Encargos Recientes'}
+            {language === 'en' ? 'Your Personal Orders' : 'Tus Encargos Personales'}
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {orders.slice(0, 4).map((ord) => (
+            {userOrders.map((ord) => (
               <Link
                 key={ord.id}
                 href={`/track/${ord.orderNumber.replace('#', '')}`}
@@ -123,19 +172,37 @@ export default function TrackSearchPage() {
                     <span className="font-mono text-xs font-bold text-neutral-900 dark:text-white">
                       {ord.orderNumber}
                     </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      ord.status === 'completed'
-                        ? 'bg-emerald-500/15 text-emerald-600'
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        ord.status === 'completed'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                          : ord.status === 'in_review'
+                          ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400'
+                          : ord.status === 'in_progress'
+                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400'
+                          : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                      }`}
+                    >
+                      {ord.status === 'completed'
+                        ? language === 'en'
+                          ? 'Completed'
+                          : 'Completado'
                         : ord.status === 'in_review'
-                        ? 'bg-purple-500/15 text-purple-600'
+                        ? language === 'en'
+                          ? 'In Review'
+                          : 'En Revisión'
                         : ord.status === 'in_progress'
-                        ? 'bg-blue-500/15 text-blue-600'
-                        : 'bg-rose-500/15 text-rose-600'
-                    }`}>
-                      {ord.status === 'completed' ? (language === 'en' ? 'Completed' : 'Completado') : ord.status === 'in_review' ? (language === 'en' ? 'In Review' : 'En Revisión') : ord.status === 'in_progress' ? (language === 'en' ? 'In Progress' : 'En Proceso') : (language === 'en' ? 'Pending' : 'Pendiente')}
+                        ? language === 'en'
+                          ? 'In Progress'
+                          : 'En Proceso'
+                        : language === 'en'
+                        ? 'Pending'
+                        : 'Pendiente'}
                     </span>
                   </div>
-                  <p className="text-xs text-neutral-500">{ord.customerName} • {ord.items[0]?.title}</p>
+                  <p className="text-xs text-neutral-500">
+                    {ord.customerName} • {ord.items[0]?.title}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-1 text-xs font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform">
