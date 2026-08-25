@@ -20,6 +20,15 @@ test.describe('Mobile Viewport Audit', () => {
     await prefDropdown.click();
     await page.screenshot({ path: 'C:/Users/franc/.gemini/antigravity/brain/7c056989-af57-47cf-a1b0-3a608623432c/mobile-preferences.png' });
     await page.mouse.click(10, 10); // close
+    await page.waitForTimeout(200);
+
+    // 2b. Hamburger Drawer Menu open on mobile (showing Dark Mode, Cart, Profile, Nav)
+    const burgerBtn = page.locator('[data-testid="mobile-menu-trigger"]');
+    await burgerBtn.click();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: 'C:/Users/franc/.gemini/antigravity/brain/7c056989-af57-47cf-a1b0-3a608623432c/mobile-burger-menu.png' });
+    await burgerBtn.click(); // close
+    await page.waitForTimeout(200);
 
     // 3. Commission Customization Modal
     const orderBtn = page.locator('button').filter({ hasText: /(Solicitar Comisión|Order Commission)/i }).first();

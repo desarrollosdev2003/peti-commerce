@@ -138,12 +138,15 @@ export const Navbar = () => {
           {/* Combined Language & Currency Preferences Dropdown */}
           <PreferencesDropdown />
 
-          <ThemeToggle />
+          {/* Desktop Only: Theme Toggle */}
+          <div className="hidden md:flex">
+            <ThemeToggle />
+          </div>
 
-          {/* Cart Trigger */}
+          {/* Desktop Only: Cart Trigger */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative flex items-center gap-1.5 rounded-xl bg-neutral-900 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold text-white shadow-sm hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 transition-all active:scale-95 cursor-pointer"
+            className="hidden md:flex relative items-center gap-1.5 rounded-xl bg-neutral-900 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs font-semibold text-white shadow-sm hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 transition-all active:scale-95 cursor-pointer"
             aria-label="Ver carrito"
           >
             <ShoppingBag className="h-4 w-4 shrink-0" />
@@ -155,188 +158,288 @@ export const Navbar = () => {
             )}
           </button>
 
-          {/* Customer Auth Button / Avatar Dropdown */}
-          {user ? (
-            <div className="relative">
-              <button
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 p-1 sm:px-2 sm:py-1 hover:border-rose-300 transition-colors"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
-                  alt={user.name}
-                  className="h-6 w-6 rounded-full object-cover"
-                />
-                <span className="hidden sm:inline text-xs font-bold text-neutral-800 dark:text-neutral-200 max-w-[80px] truncate">
-                  {user.name.split(' ')[0]}
-                </span>
-                <ChevronDown className="h-3 w-3 text-neutral-400" />
-              </button>
-
-              {/* User Dropdown Menu */}
-              {userDropdownOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-48 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-1.5 shadow-xl space-y-0.5 animate-in fade-in zoom-in-95 duration-100 z-50"
-                  onClick={() => setUserDropdownOpen(false)}
+          {/* Desktop Only: Customer Auth Button / Avatar Dropdown */}
+          <div className="hidden md:block">
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 p-1 sm:px-2 sm:py-1 hover:border-rose-300 transition-colors"
                 >
-                  <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
-                    <p className="text-xs font-bold text-neutral-900 dark:text-white truncate flex items-center justify-between">
-                      <span>{user.name}</span>
-                      {user.role === 'admin' && (
-                        <span className="text-[9px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.2 rounded-full font-extrabold">
-                          Admin
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-[10px] text-neutral-400 truncate">{user.email}</p>
-                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
+                    alt={user.name}
+                    className="h-6 w-6 rounded-full object-cover"
+                  />
+                  <span className="hidden sm:inline text-xs font-bold text-neutral-800 dark:text-neutral-200 max-w-[80px] truncate">
+                    {user.name.split(' ')[0]}
+                  </span>
+                  <ChevronDown className="h-3 w-3 text-neutral-400" />
+                </button>
 
-                  <Link
-                    href="/account"
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors"
+                {/* User Dropdown Menu */}
+                {userDropdownOpen && (
+                  <div
+                    className="absolute right-0 mt-2 w-48 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-1.5 shadow-xl space-y-0.5 animate-in fade-in zoom-in-95 duration-100 z-50"
+                    onClick={() => setUserDropdownOpen(false)}
                   >
-                    <Package className="h-3.5 w-3.5 text-rose-500" />
-                    <span>{t('nav_user_orders')}</span>
-                  </Link>
+                    <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
+                      <p className="text-xs font-bold text-neutral-900 dark:text-white truncate flex items-center justify-between">
+                        <span>{user.name}</span>
+                        {user.role === 'admin' && (
+                          <span className="text-[9px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.2 rounded-full font-extrabold">
+                            Admin
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-[10px] text-neutral-400 truncate">{user.email}</p>
+                    </div>
 
-                  <Link
-                    href="/account"
-                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5 text-rose-500" />
-                    <span>{t('nav_user_chats')}</span>
-                  </Link>
-
-                  {user.role === 'admin' && (
                     <Link
-                      href="/admin"
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-neutral-800 transition-colors"
+                      href="/account"
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors"
                     >
-                      <LayoutDashboard className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>{t('nav_admin')}</span>
+                      <Package className="h-3.5 w-3.5 text-rose-500" />
+                      <span>{t('nav_user_orders')}</span>
                     </Link>
-                  )}
 
-                  <button
-                    onClick={logout}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors text-left border-t border-neutral-100 dark:border-neutral-800"
-                  >
-                    <LogOut className="h-3.5 w-3.5" />
-                    <span>{t('nav_logout')}</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsAuthModalOpen(true)}
-              className="flex items-center gap-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold transition-colors"
-            >
-              <User className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{t('nav_signin')}</span>
-            </button>
-          )}
+                    <Link
+                      href="/account"
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 text-rose-500" />
+                      <span>{t('nav_user_chats')}</span>
+                    </Link>
+
+                    {user.role === 'admin' && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-neutral-800 transition-colors"
+                      >
+                        <LayoutDashboard className="h-3.5 w-3.5 text-emerald-500" />
+                        <span>{t('nav_admin')}</span>
+                      </Link>
+                    )}
+
+                    <button
+                      onClick={logout}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors text-left border-t border-neutral-100 dark:border-neutral-800 cursor-pointer"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      <span>{t('nav_logout')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="flex items-center gap-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold transition-colors cursor-pointer"
+              >
+                <User className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{t('nav_signin')}</span>
+              </button>
+            )}
+          </div>
 
           {/* Mobile Menu Hamburger Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="flex md:hidden h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+            data-testid="mobile-menu-trigger"
+            className="relative flex md:hidden h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
             aria-label="Abrir menú móvil"
           >
             {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
+            {totalItems > 0 && !mobileMenuOpen && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-xs">
+                {totalItems}
+              </span>
+            )}
           </button>
         </div>
       </div>
 
       {/* Mobile Slide-down Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-rose-100 dark:border-neutral-800 bg-white/95 dark:bg-neutral-950/95 p-4 space-y-2 animate-in slide-in-from-top-2 duration-150 backdrop-blur-md">
-          <Link
-            href="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`flex items-center justify-between p-3 rounded-xl text-xs font-bold transition-colors ${
-              pathname === '/'
-                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                : 'text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-900'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Palette className="h-4 w-4 text-rose-500" />
-              {t('nav_menu_catalog')}
-            </span>
-            <span className="text-[10px] text-emerald-500 font-semibold">{t('nav_menu_open_badge')}</span>
-          </Link>
+        <div className="md:hidden border-t border-rose-100 dark:border-neutral-800 bg-white/98 dark:bg-neutral-950/98 p-4 space-y-3.5 animate-in slide-in-from-top-2 duration-150 shadow-2xl backdrop-blur-md">
+          
+          {/* Section 1: User Profile / Auth Card */}
+          {user ? (
+            <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/90 dark:bg-neutral-900/60 p-3 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
+                    alt={user.name}
+                    className="h-10 w-10 rounded-xl object-cover border border-rose-200 dark:border-neutral-700 shadow-xs"
+                  />
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-extrabold text-neutral-900 dark:text-white">{user.name}</span>
+                      {user.role === 'admin' && (
+                        <span className="text-[9px] bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.2 rounded-md font-bold uppercase">
+                          Admin
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-neutral-400 truncate max-w-[170px]">{user.email}</p>
+                  </div>
+                </div>
 
-          {user && (
+                <button
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                  title={t('nav_logout')}
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-neutral-200/60 dark:border-neutral-800/60">
+                <Link
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:border-rose-300 shadow-2xs"
+                >
+                  <Package className="h-3.5 w-3.5 text-rose-500" />
+                  <span>{t('nav_user_orders')}</span>
+                </Link>
+                <Link
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-200 hover:border-rose-300 shadow-2xs"
+                >
+                  <MessageSquare className="h-3.5 w-3.5 text-rose-500" />
+                  <span>{t('nav_user_chats')}</span>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setIsAuthModalOpen(true);
+              }}
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-rose-500/10 to-pink-500/10 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all active:scale-98 cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <User className="h-4 w-4 text-rose-500" />
+                <span>{t('nav_signin')} / Crear Cuenta</span>
+              </span>
+              <span className="text-[10px] font-semibold bg-rose-500 text-white px-2 py-0.5 rounded-lg shadow-xs">
+                Acceder
+              </span>
+            </button>
+          )}
+
+          {/* Section 2: Quick Actions (Cart + Dark Mode) */}
+          <div className="grid grid-cols-2 gap-2">
+            {/* Cart Trigger */}
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setIsCartOpen(true);
+              }}
+              data-testid="mobile-cart-trigger"
+              className="flex items-center justify-between p-2.5 rounded-2xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-md transition-all active:scale-98 cursor-pointer"
+            >
+              <span className="flex items-center gap-2 text-xs font-bold">
+                <ShoppingBag className="h-4 w-4 shrink-0 text-rose-400 dark:text-rose-600" />
+                <span>{t('nav_cart')}</span>
+              </span>
+              {totalItems > 0 ? (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-extrabold text-white px-1.5 shadow-xs">
+                  {totalItems}
+                </span>
+              ) : (
+                <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-medium">0</span>
+              )}
+            </button>
+
+            {/* Dark Mode Toggle */}
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/70">
+              <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                Tema
+              </span>
+              <ThemeToggle />
+            </div>
+          </div>
+
+          {/* Section 3: Navigation Links */}
+          <div className="space-y-1 pt-2 border-t border-rose-100/70 dark:border-neutral-800/80">
             <Link
-              href="/account"
+              href="/"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between p-3 rounded-xl text-xs font-bold transition-colors ${
-                pathname.startsWith('/account')
+              className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-colors ${
+                pathname === '/'
                   ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                   : 'text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-900'
               }`}
             >
               <span className="flex items-center gap-2">
-                <Package className="h-4 w-4 text-rose-500" />
-                {t('nav_my_orders')}
+                <Palette className="h-4 w-4 text-rose-500" />
+                {t('nav_menu_catalog')}
               </span>
-              <span className="text-[10px] text-rose-500 font-semibold">{user.name}</span>
+              <span className="text-[10px] text-emerald-500 font-semibold">{t('nav_menu_open_badge')}</span>
             </Link>
-          )}
 
-          <Link
-            href="/track"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`flex items-center justify-between p-3 rounded-xl text-xs font-bold transition-colors ${
-              pathname.startsWith('/track')
-                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                : 'text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-900'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-rose-500" />
-              {t('nav_menu_tracking')}
-            </span>
-            <MessageSquare className="h-4 w-4 text-emerald-500" />
-          </Link>
-
-          <Link
-            href="/terms"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`flex items-center justify-between p-3 rounded-xl text-xs font-bold transition-colors ${
-              pathname === '/terms'
-                ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-                : 'text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-900'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-rose-500" />
-              {t('nav_menu_terms')}
-            </span>
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
-          </Link>
-
-          {isAdmin && (
             <Link
-              href="/admin"
+              href="/track"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between p-3 rounded-xl text-xs font-bold transition-colors ${
-                pathname.startsWith('/admin')
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900'
+              className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-colors ${
+                pathname.startsWith('/track')
+                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-900'
               }`}
             >
               <span className="flex items-center gap-2">
-                <LayoutDashboard className="h-4 w-4 text-emerald-500" />
-                {t('nav_menu_admin')}
+                <Search className="h-4 w-4 text-rose-500" />
+                {t('nav_menu_tracking')}
               </span>
-              <span className="text-[10px] rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 font-bold">
-                Admin
-              </span>
+              <MessageSquare className="h-4 w-4 text-emerald-500" />
             </Link>
-          )}
+
+            <Link
+              href="/terms"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-colors ${
+                pathname === '/terms'
+                  ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-rose-50 dark:hover:bg-neutral-900'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-rose-500" />
+                {t('nav_menu_terms')}
+              </span>
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            </Link>
+
+            {isAdmin && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-bold transition-colors ${
+                  pathname.startsWith('/admin')
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                    : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4 text-emerald-500" />
+                  {t('nav_menu_admin')}
+                </span>
+                <span className="text-[10px] rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 font-bold">
+                  Admin
+                </span>
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </header>
