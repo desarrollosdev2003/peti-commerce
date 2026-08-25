@@ -58,7 +58,7 @@ export const Navbar = () => {
                   {t('nav_open')}
                 </span>
               </span>
-              <span className="text-[10px] sm:text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
+              <span className="hidden sm:block text-[10px] sm:text-[11px] text-neutral-500 dark:text-neutral-400 font-medium">
                 {t('nav_commissions_store')}
               </span>
             </div>

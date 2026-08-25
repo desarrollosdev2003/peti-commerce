@@ -48,14 +48,14 @@ export const CommissionModal: React.FC<CommissionModalProps> = ({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="sticky sm:absolute top-3 right-3 sm:top-4 sm:right-4 z-30 ml-auto flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-neutral-900/80 sm:bg-neutral-100 sm:dark:bg-neutral-800 text-white sm:text-neutral-600 sm:dark:text-neutral-300 hover:bg-neutral-800 sm:hover:bg-neutral-200 transition-colors shadow-md"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-40 flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-black/60 sm:bg-neutral-100 sm:dark:bg-neutral-800 text-white sm:text-neutral-600 sm:dark:text-neutral-300 hover:bg-black/80 sm:hover:bg-neutral-200 transition-colors shadow-lg backdrop-blur-xs cursor-pointer"
           aria-label="Cerrar modal"
         >
           <X className="h-4 w-4 sm:h-5 sm:w-5" />
         </button>
 
         {/* Modal Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-0 -mt-10 sm:mt-0">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-0">
           
           {/* Left Column: Image Carousel / Gallery */}
           <div className="md:col-span-6 p-3 sm:p-6 bg-rose-50/30 dark:bg-neutral-950/60 flex flex-col justify-between border-b md:border-b-0 md:border-r border-rose-100 dark:border-neutral-800">

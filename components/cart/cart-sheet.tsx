@@ -50,14 +50,13 @@ export const CartSheet = () => {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
-        <div className="fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-10">
-          <div
-            className="w-screen max-w-full sm:max-w-md border-l border-rose-100 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-2xl flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-rose-100 dark:border-neutral-800 p-4 sm:p-5">
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+        <div
+          className="fixed inset-y-0 right-0 w-full sm:max-w-md h-full border-l border-rose-100 dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-2xl flex flex-col justify-between z-50"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="shrink-0 flex items-center justify-between border-b border-rose-100 dark:border-neutral-800 p-4 sm:p-5">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
                   <ShoppingBag className="h-4 w-4" />
@@ -93,7 +92,7 @@ export const CartSheet = () => {
             </div>
 
             {/* Cart Items List */}
-            <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 space-y-3 sm:space-y-4">
+            <div className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-5 space-y-3 sm:space-y-4">
               {items.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center space-y-3 py-12">
                   <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-rose-50 dark:bg-neutral-900 text-rose-400">
@@ -191,8 +190,8 @@ export const CartSheet = () => {
                         </div>
                       </div>
 
-                      <div className="font-bold text-neutral-900 dark:text-white text-[11px] sm:text-xs">
-                        {t('cart_subtotal')}: {formatCurrency(item.unitPrice * item.quantity, currency)}
+                      <div className="font-bold text-neutral-900 dark:text-white text-xs text-right">
+                        {formatCurrency(item.unitPrice * item.quantity, currency)}
                       </div>
                     </div>
                   </div>
@@ -202,7 +201,7 @@ export const CartSheet = () => {
 
             {/* Footer Summary & Checkout Action */}
             {items.length > 0 && (
-              <div className="border-t border-rose-100 dark:border-neutral-800 bg-rose-50/20 dark:bg-neutral-900/60 p-4 sm:p-5 space-y-3 sm:space-y-4">
+              <div className="shrink-0 border-t border-rose-100 dark:border-neutral-800 bg-rose-50/20 dark:bg-neutral-900/60 p-4 sm:p-5 space-y-3 sm:space-y-4">
                 <div className="space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
                   <div className="flex justify-between">
                     <span>{t('cart_subtotal')}</span>
@@ -240,9 +239,8 @@ export const CartSheet = () => {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Checkout Modal */}
+        {/* Checkout Modal */}
       <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}

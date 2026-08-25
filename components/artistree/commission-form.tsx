@@ -78,11 +78,9 @@ export const CommissionForm: React.FC<CommissionFormProps> = ({ commission, onSu
       },
     });
 
-    setIsAdded(true);
-    setTimeout(() => {
-      setIsAdded(false);
-      if (onSuccess) onSuccess();
-    }, 800);
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   return (

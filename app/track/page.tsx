@@ -117,7 +117,7 @@ export default function TrackSearchPage() {
                 setSearchTerm(e.target.value);
                 setError('');
               }}
-              placeholder={t('track_search_placeholder')}
+              placeholder={language === 'en' ? 'e.g. #PETI-8901' : 'ej: #PETI-8901'}
               className="w-full rounded-2xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 py-3.5 pl-11 pr-24 text-xs sm:text-sm font-mono text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 focus:outline-none transition-all shadow-inner"
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />

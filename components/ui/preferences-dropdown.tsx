@@ -33,7 +33,7 @@ export const PreferencesDropdown = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         data-testid="language-toggle"
-        className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold border border-rose-200/80 dark:border-neutral-800 hover:bg-rose-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300 transition-all cursor-pointer shadow-2xs hover:border-rose-300 dark:hover:border-neutral-700"
+        className="flex items-center gap-1 sm:gap-1.5 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold border border-rose-200/80 dark:border-neutral-800 hover:bg-rose-50 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300 transition-all cursor-pointer shadow-2xs hover:border-rose-300 dark:hover:border-neutral-700 whitespace-nowrap shrink-0"
         title={language === 'es' ? 'Cambiar idioma y moneda' : 'Change language & currency'}
         aria-label="Selector de idioma y moneda"
         aria-expanded={isOpen}
@@ -44,12 +44,12 @@ export const PreferencesDropdown = () => {
           <span className="text-neutral-300 dark:text-neutral-600">•</span>
           <span className="text-rose-600 dark:text-rose-400">{currency}</span>
         </span>
-        <ChevronDown className={`h-3 w-3 text-neutral-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-rose-500' : ''}`} />
+        <ChevronDown className={`h-3 w-3 text-neutral-400 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-rose-500' : ''}`} />
       </button>
 
       {/* Dropdown Menu Popup */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md p-2 shadow-xl space-y-2 animate-in fade-in zoom-in-95 duration-150 z-50">
+        <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-2 shadow-2xl space-y-2 animate-in fade-in zoom-in-95 duration-150 z-50">
           
           {/* Section 1: Language */}
           <div className="space-y-1">

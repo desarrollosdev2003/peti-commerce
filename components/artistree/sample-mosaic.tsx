@@ -33,6 +33,9 @@ export const SampleMosaic: React.FC<SampleMosaicProps> = ({ samples, title, onSe
             alt={`${title} sample ${idx + 1}`}
             className="h-full w-full object-cover object-center transition-transform duration-300 group-hover/tile:scale-110"
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80';
+            }}
           />
           <div className="absolute inset-0 bg-black/0 group-hover/tile:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover/tile:opacity-100">
             <Eye className="h-4 w-4 text-white drop-shadow-md" />

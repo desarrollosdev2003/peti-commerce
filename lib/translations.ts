@@ -188,7 +188,7 @@ export const translations = {
 
     // Footer
     footer_tagline: 'Plataforma de comisiones artísticas y pagos seguros',
-    footer_rights: '© {year} Peti commissions. Todos los derechos reservados.',
+    footer_rights: 'Todos los derechos reservados.',
     footer_developed_with: 'Diseñado y Desarrollado con',
     footer_by: 'por',
     footer_processed_by: 'Pagos procesados por',
@@ -381,7 +381,7 @@ export const translations = {
 
     // Footer
     footer_tagline: 'Art commissions platform and secure payments',
-    footer_rights: '© {year} Peti commissions. All rights reserved.',
+    footer_rights: 'All rights reserved.',
     footer_developed_with: 'Designed & Developed with',
     footer_by: 'by',
     footer_processed_by: 'Payments processed by',

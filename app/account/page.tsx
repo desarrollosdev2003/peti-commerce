@@ -383,10 +383,10 @@ export default function CustomerAccountPage() {
 
       {/* Tab 2: Live Chat & Inbox */}
       {activeTab === 'inbox' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[600px] rounded-3xl border border-rose-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-xl">
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-0 h-[650px] sm:h-[600px] rounded-3xl border border-rose-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 overflow-hidden shadow-xl">
           {/* Left: Orders List / Conversations (4 Cols) */}
-          <div className="lg:col-span-4 border-r border-neutral-200 dark:border-neutral-800 overflow-y-auto p-3 space-y-2 bg-neutral-50/50 dark:bg-neutral-950/30">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 block mb-1">
+          <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-r border-neutral-200 dark:border-neutral-800 flex lg:flex-col overflow-x-auto lg:overflow-y-auto p-2.5 sm:p-3 gap-2 bg-neutral-50/50 dark:bg-neutral-950/30 shrink-0 scrollbar-none">
+            <span className="hidden lg:block text-[10px] font-bold uppercase tracking-wider text-neutral-400 px-2 mb-1">
               {language === 'en' ? 'Your Conversations' : 'Tus Conversaciones'}
             </span>
             {userOrders.map((ord) => {
@@ -396,13 +396,13 @@ export default function CustomerAccountPage() {
                 <div
                   key={ord.id}
                   onClick={() => setSelectedChatOrderId(ord.id)}
-                  className={`p-3 rounded-2xl cursor-pointer transition-all space-y-1 ${
+                  className={`p-2.5 sm:p-3 rounded-2xl cursor-pointer transition-all space-y-1 shrink-0 min-w-[180px] lg:min-w-0 ${
                     isSelected
                       ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
                       : 'bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-rose-300'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-1">
                     <span className="font-mono text-xs font-bold">{ord.orderNumber}</span>
                     <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${
                       isSelected ? 'bg-white/20 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
@@ -420,7 +420,7 @@ export default function CustomerAccountPage() {
 
           {/* Right: Active Chat Window (8 Cols) */}
           {selectedOrder ? (
-            <div className="lg:col-span-8 flex flex-col h-full">
+            <div className="lg:col-span-8 flex flex-col flex-1 min-h-0">
               {/* Chat Top Bar */}
               <div className="p-3.5 border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-950/40 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
